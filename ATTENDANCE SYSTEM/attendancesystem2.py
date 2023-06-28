@@ -115,7 +115,7 @@ def add_attendance(student_id, event_id, sign_type):
                 query = "UPDATE attends SET signout_datetime = datetime('now') WHERE student_ID = ? AND event_ID = ?"
                 cursor.execute(query, (student_id, event_id))
                 conn.commit()
-                update_student_table()
+                update_student_table(event_id)
                 tkMessageBox.showinfo("Signed Out", "The student has been signed out successfully.")
     else:
         # Add attendance record to the attends table based on the SIGN IN action
@@ -123,13 +123,12 @@ def add_attendance(student_id, event_id, sign_type):
             query = "INSERT INTO attends (student_ID, event_ID, signin_datetime, signout_datetime) VALUES (?, ?, datetime('now'), '-')"
             cursor.execute(query, (student_id, event_id))
             conn.commit()
-            update_student_table()
+            update_student_table(event_id)
             tkMessageBox.showinfo("Signed In", "The student has been signed in successfully.")
         else:
             tkMessageBox.showinfo("Message", "Attendance record not found.")
     
     conn.close()
-
 
 def sign_in():
     student_id = sIDentry.get()
@@ -149,7 +148,7 @@ def sign_in():
         # Add attendance record (sign-in) to the attends table
         add_attendance(student_id, event_id, 'IN')
         return
-
+    
 def sign_out():
     student_id = sIDentry.get()
     event_id = eIDentry.get().upper()
@@ -235,15 +234,15 @@ for data in fetch:
 conn.commit()
 
 #**************************************************************** UPDATE STUDENT LIST ON THE TABLE ****************************************************************#
-def update_student_table():
+def update_student_table(event_id):
     conn = sqlite3.connect('attendancesystem.db')
     cursor = conn.cursor()
     atable.delete(*atable.get_children())
-    display_data_query = cursor.execute("SELECT * FROM attends ORDER BY student_ID ASC")
+    display_data_query = cursor.execute("SELECT * FROM attends WHERE event_ID = ? ORDER BY student_ID ASC", (event_id,))
     fetch = display_data_query.fetchall()
     for data in fetch:
-        atable.insert('', 'end', values=(data[0],data[1],data[2],data[3]))
+        atable.insert('', 'end', values=(data[0], data[1], data[2], data[3]))
     conn.commit()
     conn.close()
-
+	
 win.mainloop()
