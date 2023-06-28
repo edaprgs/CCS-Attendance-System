@@ -1,3 +1,4 @@
+# COLLEGE OF COMPUTER STUDIES ATTENDANCE SYSTEM
 # GROUP 12 - CLARIN, PARAGOSO, REPE
 from tkinter import *
 import customtkinter
@@ -49,8 +50,8 @@ create_course = '''CREATE TABLE IF NOT EXISTS course (
 	"courseName"	TEXT NOT NULL,
 	PRIMARY KEY("course_code")
 )'''
-
 conn.execute(create_course)
+
 # CREATE ATTENDS TABLE
 create_attends = '''CREATE TABLE IF NOT EXISTS attends (
 	"student_ID"	TEXT NOT NULL,
@@ -66,7 +67,7 @@ conn.commit()
 
 #**************************************************************** ATTENDANCE ****************************************************************#
 def validate_student_id(student_id):
-    # Check if the student ID is in the correct format (0000-0000)
+# Check if the student ID is in the correct format (0000-0000)
     if len(student_id) != 9 or student_id[4] != '-':
         return False
     return True
@@ -74,7 +75,7 @@ def validate_student_id(student_id):
 def validate_event_id(event_id):
     conn = sqlite3.connect('attendancesystem.db')
     cursor = conn.cursor()
-    # Check if the event ID exists in the events table
+# Check if the event ID exists in the events table
     query = "SELECT event_ID FROM events WHERE event_ID = ?"
     cursor.execute(query, (event_id,))
     result = cursor.fetchone()
@@ -86,7 +87,7 @@ def validate_event_id(event_id):
 def check_student_exists(student_id):
     conn = sqlite3.connect('attendancesystem.db')
     cursor = conn.cursor()
-    # Check if the student ID exists in the student table
+# Check if the student ID exists in the student table
     query = "SELECT student_ID FROM student WHERE student_ID = ?"
     cursor.execute(query, (student_id,))
     result = cursor.fetchone()
@@ -98,8 +99,7 @@ def check_student_exists(student_id):
 def add_attendance(student_id, event_id, sign_type):
     conn = sqlite3.connect('attendancesystem.db')
     cursor = conn.cursor()
-    
-    # Check if the attendance record already exists
+# Check if the attendance record already exists
     exists_query = "SELECT * FROM attends WHERE student_ID = ? AND event_ID = ?"
     cursor.execute(exists_query, (student_id, event_id))
     existing_record = cursor.fetchone()
@@ -108,7 +108,7 @@ def add_attendance(student_id, event_id, sign_type):
         if sign_type == 'IN':
             tkMessageBox.showinfo("Sign-in Attendance Recorded", "Sign-in Attendance for this student at this event is already recorded.")
         elif sign_type == 'OUT':
-            existing_signout = existing_record[3]  # Assuming the signout_datetime is in the fourth column
+            existing_signout = existing_record[3]  
             if existing_signout != '-':
                 tkMessageBox.showinfo("Sign-out Attendance Recorded", "Sign-out Attendance for this student at this event is already recorded.")
             else:
@@ -118,7 +118,6 @@ def add_attendance(student_id, event_id, sign_type):
                 update_student_table(event_id)
                 tkMessageBox.showinfo("Signed Out", "The student has been signed out successfully.")
     else:
-        # Add attendance record to the attends table based on the SIGN IN action
         if sign_type == 'IN':
             query = "INSERT INTO attends (student_ID, event_ID, signin_datetime, signout_datetime) VALUES (?, ?, datetime('now'), '-')"
             cursor.execute(query, (student_id, event_id))
@@ -127,25 +126,22 @@ def add_attendance(student_id, event_id, sign_type):
             tkMessageBox.showinfo("Signed In", "The student has been signed in successfully.")
         else:
             tkMessageBox.showinfo("Message", "Attendance record not found.")
-    
     conn.close()
 
 def sign_in():
     student_id = sIDentry.get()
     event_id = eIDentry.get().upper()   
     if student_id=='' or event_id=='': tkMessageBox.showwarning("Warning","Please fill the empty field!")
-    else: # Validate the student ID format and existence
+    else: 
         if not validate_student_id(student_id):
             tkMessageBox.showerror("Error", "Invalid student ID format. Please use the format 0000-0000.")
             return
         if not check_student_exists(student_id):
             tkMessageBox.showerror("Error", "Student ID does not exist.")
             return
-        # Validate the event ID
         if not validate_event_id(event_id):
             tkMessageBox.showerror("Error", "Invalid event ID.")
             return
-        # Add attendance record (sign-in) to the attends table
         add_attendance(student_id, event_id, 'IN')
         return
     
@@ -154,18 +150,15 @@ def sign_out():
     event_id = eIDentry.get().upper()
     if student_id=='' or event_id=='': tkMessageBox.showwarning("Warning","Please fill the empty field!")
     else:
-        # Validate the student ID format and existence
         if not validate_student_id(student_id):
             tkMessageBox.showerror("Error", "Invalid student ID format. Please use the format 0000-0000.")
             return
         if not check_student_exists(student_id):
             tkMessageBox.showerror("Error", "Student ID does not exist.")
             return
-        # Validate the event ID
         if not validate_event_id(event_id):
             tkMessageBox.showerror("Error", "Invalid event ID.")
             return       
-        # Add attendance record (sign-out) to the attends table
         add_attendance(student_id, event_id, 'OUT')
         return
 
@@ -244,5 +237,5 @@ def update_student_table(event_id):
         atable.insert('', 'end', values=(data[0], data[1], data[2], data[3]))
     conn.commit()
     conn.close()
-	
+
 win.mainloop()
