@@ -2,7 +2,8 @@
 # GROUP 12 - CLARIN, PARAGOSO, REPE
 from tkinter import *
 import customtkinter
-from PIL import Image
+from PIL import ImageTk,Image
+from customtkinter import CTkImage
 import tkinter as tk
 from tkinter import ttk
 import tkinter.messagebox as tkMessageBox
@@ -43,6 +44,15 @@ create_event = '''CREATE TABLE IF NOT EXISTS events (
 	PRIMARY KEY("event_ID")
 )'''
 conn.execute(create_event)
+
+# CREATE EVENT LOCATIONS TABLE
+create_eventlocation = '''CREATE TABLE IF NOT EXISTS event_locations (
+	"event_ID"	TEXT NOT NULL,
+	"eventLocation"	TEXT NOT NULL,
+	PRIMARY KEY("event_ID"),
+    FOREIGN KEY("event_ID") REFERENCES "event"("event_ID")
+)'''
+conn.execute(create_eventlocation)
 
 # CREATE COURSE TABLE
 create_course = '''CREATE TABLE IF NOT EXISTS course (
@@ -161,16 +171,17 @@ def sign_out():
             return       
         add_attendance(student_id, event_id, 'OUT')
         return
+    
 
 #**************************************************************** UI ****************************************************************#
 def table_style():
-        style=ttk.Style()
-        style.theme_use("vista")
-        style.configure("Treeview",background="light cyan",fg="black",rowheight=35,fieldbackground="white")
-        style.configure("Treeview.Heading", font=('Calibri', 13,'bold')) 
-        style.configure("Treeview", highlightthickness=0, bd=0, font=('Calibri', 12)) 
-        style.layout("Treeview", [('Treeview.treearea', {'sticky': 'nswe'})]) 
-        style.map("Treeview",background=[("selected","turquoise4")])
+    style=ttk.Style()
+    style.theme_use("vista")
+    style.configure("Treeview",background="light cyan",fg="black",rowheight=35,fieldbackground="white")
+    style.configure("Treeview.Heading", font=('Calibri', 15,'bold')) 
+    style.configure("Treeview", highlightthickness=0, bd=0, font=('Calibri', 14)) 
+    style.layout("Treeview", [('Treeview.treearea', {'sticky': 'nswe'})]) 
+    style.map("Treeview",background=[("selected","turquoise4")])
 
 # BACKGROUND 
 mainframe = tk.Frame(win,width=1000,height=1000,bg="light cyan")
@@ -181,17 +192,19 @@ label1.pack(fill="x")
 frame1 = tk.Frame(mainframe,width=910,height=865,background="light cyan")
 frame1.place(x=585,y=5)
 
-# ATTENDANCE
+# ATTENDANCE LABELS
 label1 =customtkinter.CTkLabel(frame1,text="ATTENDANCE",text_color="dark slate gray",font=("Rowdies",60,"bold"))
 label1.place(x=150,y=40)
 label2 =customtkinter.CTkLabel(frame1,text="COLLEGE OF COMPUTER STUDIES",text_color="dark slate gray",font=("Arial",16))
 label2.place(x=235,y=120)
 label3 =customtkinter.CTkLabel(frame1,text="Enter Your Student Identification Number",text_color="dark slate gray",font=("Arial",15))
 label3.place(x=233,y=200)
+# ATTENDANCE ENTRIES
 sIDentry = customtkinter.CTkEntry(frame1,placeholder_text="student id",font=("Arial",35,"bold"),text_color="gray20",placeholder_text_color="gray70",border_color="lightcyan2",fg_color="white",width=450,height=60,justify="center")
 sIDentry.place(x=140,y=240)
 eIDentry = customtkinter.CTkEntry(frame1,placeholder_text="event id",font=("Arial",20,"bold"),text_color="gray20",placeholder_text_color="gray70",border_color="lightcyan2",fg_color="white",width=300,height=40,justify="center")
 eIDentry.place(x=220,y=310)
+# ATTENDANCE BUTTONS
 signinbtn =customtkinter.CTkButton(frame1,text="SIGN IN",text_color="white",font=("Arial",20,"bold"),fg_color="turquoise4",hover=True,hover_color= "cyan4",corner_radius=10,width=205,height=50,command=sign_in)
 signinbtn.place(x=140,y=370)
 signoutbtn =customtkinter.CTkButton(frame1,text="SIGN OUT",text_color="white",font=("Arial",20,"bold"),fg_color="gray12",hover=True,hover_color= "gray18",corner_radius=10,width=205,height=50,command=sign_out)
@@ -237,5 +250,108 @@ def update_student_table(event_id):
         atable.insert('', 'end', values=(data[0], data[1], data[2], data[3]))
     conn.commit()
     conn.close()
+
+#**************************************************************** BSCS ATTENDANCE ****************************************************************#
+def bscs_attendance():
+# RETURN TO THE MAIN WINDOW
+    def go_back():
+        frame1.place(x=590, y=5)
+        frame3.destroy()
+    frame3 = tk.Frame(mainframe,width=910,height=865,background="light cyan")
+    frame3.place(x=590,y=5)
+    label2 =customtkinter.CTkLabel(frame3,text="BACHELOR OF SCIENCE IN COMPUTER SCIENCE ATTENDANCE",text_color="dark slate gray",font=("Arial",16))
+    label2.place(x=155,y=15)
+    backbtn =customtkinter.CTkButton(frame3,text="RETURN",text_color="white",font=("Arial",18,"bold"),fg_color="gray12",hover=True,hover_color= "gray18",corner_radius=10,width=100,height=40,command=go_back)
+    backbtn.place(x=10,y=10)
+
+    table_style()
+    frame4 = tk.Frame(frame3,background="light cyan")
+    frame4.place(x=10, y=150, width=875, height=600)
+    y_scroll = customtkinter.CTkScrollbar(frame4, orientation=tk.VERTICAL,button_color="dark slate gray",button_hover_color="dark slate gray",fg_color="light cyan")
+    y_scroll.pack(side=RIGHT,fill=Y)
+    ctable = ttk.Treeview(frame4, columns=("student_ID","course_code","event_ID","signin_datetime","signout_datetime"), show="headings",yscrollcommand=y_scroll.set)
+    ctable.pack(fill=BOTH,expand=True)
+
+    # COLUMNS
+    ctable.column("#0", width=0, stretch=NO)  
+    ctable.column("student_ID", width=60,anchor=CENTER)
+    ctable.column("course_code", width=60,anchor=CENTER)
+    ctable.column("event_ID", width=60,anchor=CENTER)
+    ctable.column("signin_datetime", width=120,anchor=CENTER)
+    ctable.column("signout_datetime", width=130,anchor=CENTER)
+
+    # HEADINGS
+    ctable.heading("student_ID", text="STUDENT ID")
+    ctable.heading("course_code", text="COURSE CODE")
+    ctable.heading("event_ID", text="EVENT ID")
+    ctable.heading("signin_datetime", text="SIGN IN DATE/TIME")
+    ctable.heading("signout_datetime", text="SIGN OUT DATE/TIME")
+
+    conn = sqlite3.connect('attendancesystem.db')
+    cursor = conn.cursor()
+    # Execute the query and fetch the attendance records
+    display_data_query = cursor.execute('''SELECT student.student_ID, course.course_code, events.event_id, attends.signin_datetime, attends.signout_datetime FROM student 
+    INNER JOIN attends ON student.student_ID = attends.student_ID INNER JOIN events ON attends.event_ID = events.event_ID INNER JOIN course ON student.course_code = course.course_code WHERE course.course_code = 'BSCS' ''')
+    attendance_records = display_data_query.fetchall()
+    # Populate the Treeview with the attendance records
+    for record in attendance_records:
+        ctable.insert('', 'end', values=(record[0], record[1], record[2], record[3], record[4]))
+    conn.commit()
+
+#**************************************************************** TOGGLE MENU ****************************************************************#
+def toggle_win():
+    tframe=Frame(frame1,width=350,height=865,bg='turquoise4')
+    tframe.place(x=0,y=0)
+
+    def bttn(x,y,text,bcolor,fcolor,cmd):
+     
+        def on_entera(e):
+            myButton1['background'] = bcolor #ffcc66
+            myButton1['foreground']= 'black'  #000d33
+
+        def on_leavea(e):
+            myButton1['background'] = fcolor
+            myButton1['foreground']= 'white'
+
+        button_width = 50
+        button_height = 3
+
+        def command_wrapper():
+            cmd()
+            tframe.place_forget()
+
+        myButton1 = Button(tframe,text=text,width=button_width,height=button_height,fg='white',border=0,bg=fcolor,activeforeground='white',
+                    activebackground='white',command=command_wrapper,font=('Arial', 13,"bold"))
+                      
+        myButton1.bind("<Enter>", on_entera)
+        myButton1.bind("<Leave>", on_leavea)
+        myButton1.place(x=180,y=y,anchor='center')
+        return myButton1
+
+    buttons = []
+    buttons.append(bttn(0, 100, 'BSCS ATTENDANCE', 'turquoise3', 'turquoise4', bscs_attendance))
+    buttons.append(bttn(0, 170, 'BSCA ATTENDANCE', 'turquoise3', 'turquoise4', None))
+    buttons.append(bttn(0, 240, 'BSIS ATTENDANCE', 'turquoise3', 'turquoise4', None))
+    buttons.append(bttn(0, 310, 'BSIT ATTENDANCE', 'turquoise3', 'turquoise4', None))
+    #buttons.append(bttn(0, 380, 'A C E R', 'turquoise3', 'turquoise4', None))
+    #buttons.append(bttn(0, 450, 'A C E R', 'turquoise3', 'turquoise4', None))
+
+    def close_menu():
+        tframe.place_forget()
+
+    global img2
+    image2 = Image.open("close.png")
+    new_size = (50,50) 
+    resized_image = image2.resize(new_size)
+    img2 = ImageTk.PhotoImage(resized_image)
+
+    Button(tframe,image=img2,border=0,command=close_menu,bg='turquoise4',activebackground='turquoise4').place(x=5,y=10)
+    
+image1 = Image.open("open.png")
+new_size = (50,50) 
+resized_image = image1.resize(new_size)
+img1 = ImageTk.PhotoImage(resized_image)
+
+Button(frame1,image=img1,command=toggle_win,border=0,bg='light cyan',activebackground='light cyan').place(x=5,y=10)
 
 win.mainloop()
