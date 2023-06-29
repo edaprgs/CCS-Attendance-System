@@ -136,6 +136,7 @@ def add_attendance(student_id, event_id, sign_type):
             tkMessageBox.showinfo("Signed In", "The student has been signed in successfully.")
         else:
             tkMessageBox.showinfo("Message", "Attendance record not found.")
+    clear_inputs()
     conn.close()
 
 def sign_in():
@@ -171,7 +172,10 @@ def sign_out():
             return       
         add_attendance(student_id, event_id, 'OUT')
         return
-    
+
+def clear_inputs():
+        sIDentry.delete(0, END)
+        eIDentry.delete(0, END)
 
 #**************************************************************** UI ****************************************************************#
 def table_style():
@@ -269,23 +273,23 @@ def bscs_attendance():
     frame4.place(x=10, y=150, width=875, height=600)
     y_scroll = customtkinter.CTkScrollbar(frame4, orientation=tk.VERTICAL,button_color="dark slate gray",button_hover_color="dark slate gray",fg_color="light cyan")
     y_scroll.pack(side=RIGHT,fill=Y)
-    ctable = ttk.Treeview(frame4, columns=("student_ID","course_code","event_ID","signin_datetime","signout_datetime"), show="headings",yscrollcommand=y_scroll.set)
-    ctable.pack(fill=BOTH,expand=True)
+    cstable = ttk.Treeview(frame4, columns=("student_ID","course_code","event_ID","signin_datetime","signout_datetime"), show="headings",yscrollcommand=y_scroll.set)
+    cstable.pack(fill=BOTH,expand=True)
 
     # COLUMNS
-    ctable.column("#0", width=0, stretch=NO)  
-    ctable.column("student_ID", width=60,anchor=CENTER)
-    ctable.column("course_code", width=60,anchor=CENTER)
-    ctable.column("event_ID", width=60,anchor=CENTER)
-    ctable.column("signin_datetime", width=120,anchor=CENTER)
-    ctable.column("signout_datetime", width=130,anchor=CENTER)
+    cstable.column("#0", width=0, stretch=NO)  
+    cstable.column("student_ID", width=60,anchor=CENTER)
+    cstable.column("course_code", width=60,anchor=CENTER)
+    cstable.column("event_ID", width=60,anchor=CENTER)
+    cstable.column("signin_datetime", width=120,anchor=CENTER)
+    cstable.column("signout_datetime", width=130,anchor=CENTER)
 
     # HEADINGS
-    ctable.heading("student_ID", text="STUDENT ID")
-    ctable.heading("course_code", text="COURSE CODE")
-    ctable.heading("event_ID", text="EVENT ID")
-    ctable.heading("signin_datetime", text="SIGN IN DATE/TIME")
-    ctable.heading("signout_datetime", text="SIGN OUT DATE/TIME")
+    cstable.heading("student_ID", text="STUDENT ID")
+    cstable.heading("course_code", text="COURSE CODE")
+    cstable.heading("event_ID", text="EVENT ID")
+    cstable.heading("signin_datetime", text="SIGN IN DATE/TIME")
+    cstable.heading("signout_datetime", text="SIGN OUT DATE/TIME")
 
     conn = sqlite3.connect('attendancesystem.db')
     cursor = conn.cursor()
@@ -295,7 +299,148 @@ def bscs_attendance():
     attendance_records = display_data_query.fetchall()
     # Populate the Treeview with the attendance records
     for record in attendance_records:
-        ctable.insert('', 'end', values=(record[0], record[1], record[2], record[3], record[4]))
+        cstable.insert('', 'end', values=(record[0], record[1], record[2], record[3], record[4]))
+    conn.commit()
+
+#**************************************************************** BSCA ATTENDANCE ****************************************************************#
+def bsca_attendance():
+# RETURN TO THE MAIN WINDOW
+    def go_back():
+        frame1.place(x=590, y=5)
+        frame3.destroy()
+    frame3 = tk.Frame(mainframe,width=910,height=865,background="light cyan")
+    frame3.place(x=590,y=5)
+    label2 =customtkinter.CTkLabel(frame3,text="BACHELOR OF SCIENCE IN COMPUTER APPLICATION ATTENDANCE",text_color="dark slate gray",font=("Arial",16))
+    label2.place(x=155,y=15)
+    backbtn =customtkinter.CTkButton(frame3,text="RETURN",text_color="white",font=("Arial",18,"bold"),fg_color="gray12",hover=True,hover_color= "gray18",corner_radius=10,width=100,height=40,command=go_back)
+    backbtn.place(x=10,y=10)
+
+    table_style()
+    frame4 = tk.Frame(frame3,background="light cyan")
+    frame4.place(x=10, y=150, width=875, height=600)
+    y_scroll = customtkinter.CTkScrollbar(frame4, orientation=tk.VERTICAL,button_color="dark slate gray",button_hover_color="dark slate gray",fg_color="light cyan")
+    y_scroll.pack(side=RIGHT,fill=Y)
+    catable = ttk.Treeview(frame4, columns=("student_ID","course_code","event_ID","signin_datetime","signout_datetime"), show="headings",yscrollcommand=y_scroll.set)
+    catable.pack(fill=BOTH,expand=True)
+
+    # COLUMNS
+    catable.column("#0", width=0, stretch=NO)  
+    catable.column("student_ID", width=60,anchor=CENTER)
+    catable.column("course_code", width=60,anchor=CENTER)
+    catable.column("event_ID", width=60,anchor=CENTER)
+    catable.column("signin_datetime", width=120,anchor=CENTER)
+    catable.column("signout_datetime", width=130,anchor=CENTER)
+
+    # HEADINGS
+    catable.heading("student_ID", text="STUDENT ID")
+    catable.heading("course_code", text="COURSE CODE")
+    catable.heading("event_ID", text="EVENT ID")
+    catable.heading("signin_datetime", text="SIGN IN DATE/TIME")
+    catable.heading("signout_datetime", text="SIGN OUT DATE/TIME")
+
+    conn = sqlite3.connect('attendancesystem.db')
+    cursor = conn.cursor()
+    # Execute the query and fetch the attendance records
+    display_data_query = cursor.execute('''SELECT student.student_ID, course.course_code, events.event_id, attends.signin_datetime, attends.signout_datetime FROM student 
+    INNER JOIN attends ON student.student_ID = attends.student_ID INNER JOIN events ON attends.event_ID = events.event_ID INNER JOIN course ON student.course_code = course.course_code WHERE course.course_code = 'BSCA' ''')
+    attendance_records = display_data_query.fetchall()
+    # Populate the Treeview with the attendance records
+    for record in attendance_records:
+        catable.insert('', 'end', values=(record[0], record[1], record[2], record[3], record[4]))
+    conn.commit()
+
+#**************************************************************** BSIT ATTENDANCE ****************************************************************#
+def bsit_attendance():
+# RETURN TO THE MAIN WINDOW
+    def go_back():
+        frame1.place(x=590, y=5)
+        frame3.destroy()
+    frame3 = tk.Frame(mainframe,width=910,height=865,background="light cyan")
+    frame3.place(x=590,y=5)
+    label2 =customtkinter.CTkLabel(frame3,text="BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY ATTENDANCE",text_color="dark slate gray",font=("Arial",16))
+    label2.place(x=155,y=15)
+    backbtn =customtkinter.CTkButton(frame3,text="RETURN",text_color="white",font=("Arial",18,"bold"),fg_color="gray12",hover=True,hover_color= "gray18",corner_radius=10,width=100,height=40,command=go_back)
+    backbtn.place(x=10,y=10)
+
+    table_style()
+    frame4 = tk.Frame(frame3,background="light cyan")
+    frame4.place(x=10, y=150, width=875, height=600)
+    y_scroll = customtkinter.CTkScrollbar(frame4, orientation=tk.VERTICAL,button_color="dark slate gray",button_hover_color="dark slate gray",fg_color="light cyan")
+    y_scroll.pack(side=RIGHT,fill=Y)
+    ittable = ttk.Treeview(frame4, columns=("student_ID","course_code","event_ID","signin_datetime","signout_datetime"), show="headings",yscrollcommand=y_scroll.set)
+    ittable.pack(fill=BOTH,expand=True)
+
+    # COLUMNS
+    ittable.column("#0", width=0, stretch=NO)  
+    ittable.column("student_ID", width=60,anchor=CENTER)
+    ittable.column("course_code", width=60,anchor=CENTER)
+    ittable.column("event_ID", width=60,anchor=CENTER)
+    ittable.column("signin_datetime", width=120,anchor=CENTER)
+    ittable.column("signout_datetime", width=130,anchor=CENTER)
+
+    # HEADINGS
+    ittable.heading("student_ID", text="STUDENT ID")
+    ittable.heading("course_code", text="COURSE CODE")
+    ittable.heading("event_ID", text="EVENT ID")
+    ittable.heading("signin_datetime", text="SIGN IN DATE/TIME")
+    ittable.heading("signout_datetime", text="SIGN OUT DATE/TIME")
+
+    conn = sqlite3.connect('attendancesystem.db')
+    cursor = conn.cursor()
+    # Execute the query and fetch the attendance records
+    display_data_query = cursor.execute('''SELECT student.student_ID, course.course_code, events.event_id, attends.signin_datetime, attends.signout_datetime FROM student 
+    INNER JOIN attends ON student.student_ID = attends.student_ID INNER JOIN events ON attends.event_ID = events.event_ID INNER JOIN course ON student.course_code = course.course_code WHERE course.course_code = 'BSIT' ''')
+    attendance_records = display_data_query.fetchall()
+    # Populate the Treeview with the attendance records
+    for record in attendance_records:
+        ittable.insert('', 'end', values=(record[0], record[1], record[2], record[3], record[4]))
+    conn.commit()
+
+#**************************************************************** BSIS ATTENDANCE ****************************************************************#
+def bsis_attendance():
+# RETURN TO THE MAIN WINDOW
+    def go_back():
+        frame1.place(x=590, y=5)
+        frame3.destroy()
+    frame3 = tk.Frame(mainframe,width=910,height=865,background="light cyan")
+    frame3.place(x=590,y=5)
+    label2 =customtkinter.CTkLabel(frame3,text="BACHELOR OF SCIENCE IN INFORMATION SYSTEM ATTENDANCE",text_color="dark slate gray",font=("Arial",16))
+    label2.place(x=155,y=15)
+    backbtn =customtkinter.CTkButton(frame3,text="RETURN",text_color="white",font=("Arial",18,"bold"),fg_color="gray12",hover=True,hover_color= "gray18",corner_radius=10,width=100,height=40,command=go_back)
+    backbtn.place(x=10,y=10)
+
+    table_style()
+    frame4 = tk.Frame(frame3,background="light cyan")
+    frame4.place(x=10, y=150, width=875, height=600)
+    y_scroll = customtkinter.CTkScrollbar(frame4, orientation=tk.VERTICAL,button_color="dark slate gray",button_hover_color="dark slate gray",fg_color="light cyan")
+    y_scroll.pack(side=RIGHT,fill=Y)
+    istable = ttk.Treeview(frame4, columns=("student_ID","course_code","event_ID","signin_datetime","signout_datetime"), show="headings",yscrollcommand=y_scroll.set)
+    istable.pack(fill=BOTH,expand=True)
+
+    # COLUMNS
+    istable.column("#0", width=0, stretch=NO)  
+    istable.column("student_ID", width=60,anchor=CENTER)
+    istable.column("course_code", width=60,anchor=CENTER)
+    istable.column("event_ID", width=60,anchor=CENTER)
+    istable.column("signin_datetime", width=120,anchor=CENTER)
+    istable.column("signout_datetime", width=130,anchor=CENTER)
+
+    # HEADINGS
+    istable.heading("student_ID", text="STUDENT ID")
+    istable.heading("course_code", text="COURSE CODE")
+    istable.heading("event_ID", text="EVENT ID")
+    istable.heading("signin_datetime", text="SIGN IN DATE/TIME")
+    istable.heading("signout_datetime", text="SIGN OUT DATE/TIME")
+
+    conn = sqlite3.connect('attendancesystem.db')
+    cursor = conn.cursor()
+    # Execute the query and fetch the attendance records
+    display_data_query = cursor.execute('''SELECT student.student_ID, course.course_code, events.event_id, attends.signin_datetime, attends.signout_datetime FROM student 
+    INNER JOIN attends ON student.student_ID = attends.student_ID INNER JOIN events ON attends.event_ID = events.event_ID INNER JOIN course ON student.course_code = course.course_code WHERE course.course_code = 'BSIS' ''')
+    attendance_records = display_data_query.fetchall()
+    # Populate the Treeview with the attendance records
+    for record in attendance_records:
+        istable.insert('', 'end', values=(record[0], record[1], record[2], record[3], record[4]))
     conn.commit()
 
 #**************************************************************** TOGGLE MENU ****************************************************************#
@@ -330,9 +475,9 @@ def toggle_win():
 
     buttons = []
     buttons.append(bttn(0, 100, 'BSCS ATTENDANCE', 'turquoise3', 'turquoise4', bscs_attendance))
-    buttons.append(bttn(0, 170, 'BSCA ATTENDANCE', 'turquoise3', 'turquoise4', None))
-    buttons.append(bttn(0, 240, 'BSIS ATTENDANCE', 'turquoise3', 'turquoise4', None))
-    buttons.append(bttn(0, 310, 'BSIT ATTENDANCE', 'turquoise3', 'turquoise4', None))
+    buttons.append(bttn(0, 170, 'BSCA ATTENDANCE', 'turquoise3', 'turquoise4', bsca_attendance))
+    buttons.append(bttn(0, 240, 'BSIS ATTENDANCE', 'turquoise3', 'turquoise4', bsit_attendance))
+    buttons.append(bttn(0, 310, 'BSIT ATTENDANCE', 'turquoise3', 'turquoise4', bsis_attendance))
     #buttons.append(bttn(0, 380, 'A C E R', 'turquoise3', 'turquoise4', None))
     #buttons.append(bttn(0, 450, 'A C E R', 'turquoise3', 'turquoise4', None))
 
