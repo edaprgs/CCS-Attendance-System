@@ -476,8 +476,8 @@ def toggle_win():
     buttons = []
     buttons.append(bttn(0, 100, 'BSCS ATTENDANCE', 'turquoise3', 'turquoise4', bscs_attendance))
     buttons.append(bttn(0, 170, 'BSCA ATTENDANCE', 'turquoise3', 'turquoise4', bsca_attendance))
-    buttons.append(bttn(0, 240, 'BSIS ATTENDANCE', 'turquoise3', 'turquoise4', bsit_attendance))
-    buttons.append(bttn(0, 310, 'BSIT ATTENDANCE', 'turquoise3', 'turquoise4', bsis_attendance))
+    buttons.append(bttn(0, 240, 'BSIS ATTENDANCE', 'turquoise3', 'turquoise4', bsis_attendance))
+    buttons.append(bttn(0, 310, 'BSIT ATTENDANCE', 'turquoise3', 'turquoise4', bsit_attendance))
     #buttons.append(bttn(0, 380, 'A C E R', 'turquoise3', 'turquoise4', None))
     #buttons.append(bttn(0, 450, 'A C E R', 'turquoise3', 'turquoise4', None))
 
