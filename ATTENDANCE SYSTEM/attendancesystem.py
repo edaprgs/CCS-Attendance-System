@@ -20,10 +20,10 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.resizable(False, False)    
 
 # **************************************************************** DATABASE CONNECTION ****************************************************************#
-# ESTABLISH DATABASE CONNECTION
+    # ESTABLISH DATABASE CONNECTION
         self.conn = sqlite3.connect('attendancesystem.db')
         self.cursor = self.conn.cursor()
-# CREATE STUDENT TABLE
+    # CREATE STUDENT TABLE
         create_student = '''CREATE TABLE IF NOT EXISTS student (
             "student_ID"	TEXT NOT NULL,
             "lastName"	TEXT NOT NULL,
@@ -35,7 +35,7 @@ class AttendanceSystemApp(customtkinter.CTk):
             FOREIGN KEY("course_code") REFERENCES "course"("course_code")
         )'''
         self.conn.execute(create_student)
-# CREATE EVENT TABLE
+    # CREATE EVENT TABLE
         create_event = '''CREATE TABLE IF NOT EXISTS events (
             "event_ID"	TEXT NOT NULL,
             "eventName"	TEXT NOT NULL,
@@ -46,7 +46,7 @@ class AttendanceSystemApp(customtkinter.CTk):
             PRIMARY KEY("event_ID")
         )'''
         self.conn.execute(create_event)
-# CREATE EVENT LOCATIONS TABLE
+    # CREATE EVENT LOCATIONS TABLE
         create_eventlocation = '''CREATE TABLE IF NOT EXISTS event_locations (
             "event_ID"	TEXT NOT NULL,
             "eventLocation"	TEXT NOT NULL,
@@ -54,14 +54,14 @@ class AttendanceSystemApp(customtkinter.CTk):
             FOREIGN KEY("event_ID") REFERENCES "event"("event_ID")
         )'''
         self.conn.execute(create_eventlocation)
-# CREATE COURSE TABLE
+    # CREATE COURSE TABLE
         create_course = '''CREATE TABLE IF NOT EXISTS course (
             "course_code"	TEXT NOT NULL,
             "courseName"	TEXT NOT NULL,
             PRIMARY KEY("course_code")
         )'''
         self.conn.execute(create_course)
-# CREATE ATTENDS TABLE
+    # CREATE ATTENDS TABLE
         create_attends = '''CREATE TABLE IF NOT EXISTS attends (
             "student_ID"	TEXT NOT NULL,
             "event_ID"	TEXT NOT NULL,
@@ -75,7 +75,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.conn.commit()
 
 #**************************************************************** MAIN SCREEN ****************************************************************#
-# BACKGROUND 
+    # BACKGROUND 
         self.mainframe = tk.Frame(self,width=1000,height=1000,background="gray1")
         self.mainframe.pack(fill="both")
         self.bg_img = customtkinter.CTkImage(light_image=Image.open("C:\\Users\\User\\Desktop\\ATTENDANCE SYSTEM\\Wolf16.jpg"),size=(500,800))
@@ -93,9 +93,10 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.label3.place(x=55,y=170)
         self.label4 =customtkinter.CTkLabel(self.mainframe,text="ATTENDANCE",text_color="lightgoldenrod3",font=("Rowdies",70,"bold"))
         self.label4.place(x=55,y=220)
-        self.attendancebtn =customtkinter.CTkButton(self.mainframe,text="Record Now",text_color="black",font=("Arial",20,"bold"),fg_color="lightgoldenrod4",hover=True,hover_color= "lightgoldenrod3",corner_radius=10,width=205,height=50,command=self.eventcom)
+        self.attendancebtn =customtkinter.CTkButton(self.mainframe,text="Mark Attendance",text_color="black",font=("Arial",20,"bold"),fg_color="lightgoldenrod3",hover=True,hover_color= "lightgoldenrod2",corner_radius=10,width=205,height=50,command=self.eventcom)
         self.attendancebtn.place(x=55,y=335)
-# TABLE STYLE CONFIGURATION
+
+    # TABLE STYLE CONFIGURATION
     def tablestyle(self):
         style = ttk.Style()
         style.configure("Treeview", background="light yellow2", fg="lightgoldenrod4", rowheight=35,
@@ -114,8 +115,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.tabview.configure(text_color="black",fg_color="light yellow",segmented_button_fg_color="lightgoldenrod3",segmented_button_selected_color="light yellow",segmented_button_unselected_color="lightgoldenrod3",segmented_button_unselected_hover_color="light yellow",segmented_button_selected_hover_color="light yellow")
         self.tabview.add("ADD EVENT")  
         self.tabview.add("EVENTS LIST") 
-        self.tabview.set("EVENTS LIST") 
-# LABELS
+    # LABELS
         self.elabel1 =customtkinter.CTkLabel(self.tabview.tab("ADD EVENT"),text="EVENT INFORMATION:",text_color="black",font=("Helvetica",16,"bold"))
         self.elabel1.place(x=45,y=45)
         self.elabel2 =customtkinter.CTkLabel(self.tabview.tab("ADD EVENT"),text="EVENT ID:",text_color="black",font=("Helvetica",15))
@@ -130,7 +130,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.elabel5.place(x=45,y=380)
         self.elabel6 =customtkinter.CTkLabel(self.tabview.tab("ADD EVENT"),text="SEMESTER:",text_color="black",font=("Helvetica",15))
         self.elabel6.place(x=535,y=205)
-# ENTRIES
+    # ENTRIES
         self.eIDentry = customtkinter.CTkEntry(self.tabview.tab("ADD EVENT"),placeholder_text="e.g. EVENT ID",placeholder_text_color="lightgoldenrod4",border_color="lightgoldenrod2",fg_color="lightgoldenrod2",width=295,height=35)
         self.eIDentry.place(x=180,y=120)
         self.eNameentry = customtkinter.CTkEntry(self.tabview.tab("ADD EVENT"),placeholder_text="e.g. EVENT NAME",placeholder_text_color="lightgoldenrod4",border_color="lightgoldenrod2",fg_color="lightgoldenrod2",width=295,height=35)
@@ -159,14 +159,14 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.semesterOM_var = tkinter.StringVar(value="Select")
         self.semesterOM = customtkinter.CTkOptionMenu(self.tabview.tab("ADD EVENT"),variable=self.semesterOM_var,values=["1ST SEMESTER","2ND SEMESTER"],text_color="black",dynamic_resizing=TRUE,width=160,fg_color="lightgoldenrod2",button_color="lightgoldenrod4",button_hover_color="lightgoldenrod4",dropdown_fg_color="lightgoldenrod2",dropdown_hover_color="lightgoldenrod3")
         self.semesterOM.place(x=680,y=205)
-# SAVE BUTTON
+    # SAVE BUTTON
         self.esavebtn = customtkinter.CTkButton(self.tabview.tab("ADD EVENT"),text="ADD EVENT",font=("Helvetica",14),text_color="black",fg_color="lightgoldenrod2",border_width=2,hover=True,hover_color= "lightgoldenrod1",corner_radius=10,border_color= "lightgoldenrod2",width=100,height=35,command=self.add_event)
         self.esavebtn.place(x=640,y=295)
 
 #**************************************************************** EVENTS LIST TABVIEW ****************************************************************#
         self.elabel7 =customtkinter.CTkLabel(self.tabview.tab("EVENTS LIST"),text="EVENTS LIST:",text_color="black",font=("Helvetica",16,"bold"))
         self.elabel7.place(x=50,y=45)
-# SEARCH
+    # SEARCH
         self.elabel8 =customtkinter.CTkLabel(self.tabview.tab("EVENTS LIST"),text="SEARCH:",text_color="black",font=("Helvetica",13))
         self.elabel8.place(x=610,y=45)
         self.esearch_var = StringVar()
@@ -174,7 +174,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.esearchentry.place(x=680,y=45)
         self.esearchentry.bind("<KeyRelease>", self.search_event)
 
-# EVENT LIST TABLE
+# ******** LIST OF EVENTS
         self.tablestyle()
         self.table_frame = tk.Frame(self.tabview.tab("EVENTS LIST"),bg="white")
         self.table_frame.place(x=55,y=125,width=1000,height=360)
@@ -197,7 +197,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.etable.heading("SCHOOL YEAR", text="SCHOOL YEAR")
         self.etable.heading("SEMESTER", text="SEMESTER")
         self.etable.pack(fill=BOTH,expand=True)
-# FETCH DATA FROM DATABASE AND DISPLAY ON THE TABLE
+    # FETCH DATA FROM DATABASE AND DISPLAY ON THE TABLE
         conn = sqlite3.connect('attendancesystem.db')
         cursor = conn.cursor()
         display_data_query = cursor.execute("SELECT * FROM events ORDER BY event_ID ASC")
@@ -206,7 +206,7 @@ class AttendanceSystemApp(customtkinter.CTk):
             self.etable.insert('', 'end', values=(data[0], data[1], data[2], data[3], data[4], data[5]))
         conn.commit()
         conn.close()
-# BUTTONS
+    # BUTTONS
         self.eviewbtn = customtkinter.CTkButton(self.tabview.tab("EVENTS LIST"),text="VIEW ATTENDANCE",font=("Helvetica",14),text_color="black",fg_color="lightgoldenrod2",border_width=2,hover= True,hover_color= "lightgoldenrod1",corner_radius=10,border_color= "lightgoldenrod2",width=100,height=35)
         self.eviewbtn.place(x=45,y=405)
         self.eeditbtn = customtkinter.CTkButton(self.tabview.tab("EVENTS LIST"),text="EDIT EVENT",font=("Helvetica",14),text_color="black",fg_color="lightgoldenrod2",border_width=2,hover= True,hover_color= "lightgoldenrod1",corner_radius=10,border_color= "lightgoldenrod2",width=100,height=35)
@@ -214,7 +214,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.edeletebtn = customtkinter.CTkButton(self.tabview.tab("EVENTS LIST"),text="delete event",font=("Helvetica",14),text_color="white",fg_color="red2",border_width=2,hover= True,hover_color= "red",corner_radius=10,border_color= "red2",width=100,height=35)
         self.edeletebtn.place(x=745,y=405)
 
-# UPDATE EVENT TABLE
+    # UPDATE EVENT TABLE
     def update_event_table(self):
         conn = sqlite3.connect('attendancesystem.db')
         cursor = conn.cursor() 
@@ -226,12 +226,11 @@ class AttendanceSystemApp(customtkinter.CTk):
         conn.commit()
         conn.close()
 
-# SEARCH EVENT
+# ******** SEARCH EVENT
     def search_event(self,ev):
         conn = sqlite3.connect('attendancesystem.db')
         cursor = conn.cursor() 
         if self.esearchentry.get() != "":      
-# CLEAR TABLE
             self.etable.delete(*self.etable.get_children())
             search_term = '%' + self.esearchentry.get() + '%'
             display_search_query = cursor.execute("SELECT * FROM events WHERE event_ID LIKE ? OR eventName LIKE ?",(search_term, search_term.lower()))
@@ -241,7 +240,6 @@ class AttendanceSystemApp(customtkinter.CTk):
                 conn.commit()
             conn.close()
 
-# CLEAR ADD EVENT INPUTS
     def clear_event_inputs(self):
         self.eIDentry.delete(0, END)
         self.eNameentry.delete(0, END)
@@ -253,11 +251,11 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.yearOM2_var.set('Year')
         self.schoolyearOM_var.set('Select')
         self.semesterOM_var.set('Select')
-# ADD EVENT TO DATABASE
+
+# ******** ADD EVENT
     def add_event(self):
         conn = sqlite3.connect('attendancesystem.db')
         cursor = conn.cursor()
-# GET THE ENTRY INPUT FIELDS
         eventID = self.eIDentry.get().upper()
         eventName = self.eNameentry.get().upper()
         month1 = str(self.monthOM1_var.get())
@@ -270,7 +268,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         end_date = month2 + "/" + day2 + "/" + year2
         school_year = str(self.schoolyearOM_var.get())
         semester = str(self.semesterOM_var.get())
-# PRINT VALUES FOR DEBUGGING
+    # PRINT VALUES FOR DEBUGGING
         print("Event ID:", eventID)
         print("Event Name:", eventName)
         print("Start Date:", start_date)
@@ -291,7 +289,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.clear_event_inputs()
         self.update_event_table()
 
-# CHECK IF THE SAME EVENT ALREADY EXISTS
+    # CHECK IF THE SAME EVENT ALREADY EXISTS
     def event_exists(self ,cursor, eventID):
         conn = sqlite3.connect('attendancesystem.db')
         cursor = conn.cursor()
@@ -303,6 +301,10 @@ class AttendanceSystemApp(customtkinter.CTk):
         conn.close()
         return False
 
+# ******** DELETE EVENT
+   
+# ******** EDIT EVENT
+
 #**************************************************************** ADD STUDENT TABVIEW ****************************************************************#
     def studentcom(self):
         self.studentframe = tk.Frame(self.mainframe,width=1150,height=810,background="gray1")
@@ -312,8 +314,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.tabview.configure(text_color="black",fg_color="light yellow",segmented_button_fg_color="lightgoldenrod3",segmented_button_selected_color="light yellow",segmented_button_unselected_color="lightgoldenrod3",segmented_button_unselected_hover_color="light yellow",segmented_button_selected_hover_color="light yellow")
         self.tabview.add("ADD STUDENT")  
         self.tabview.add("STUDENTS LIST") 
-        self.tabview.set("STUDENTS LIST") 
-# LABELS
+    # LABELS
         self.slabel1 =customtkinter.CTkLabel(self.tabview.tab("ADD STUDENT"),text="STUDENT INFORMATION:",text_color="black",font=("Helvetica",16,"bold"))
         self.slabel1.place(x=45,y=45)
         self.slabel2 =customtkinter.CTkLabel(self.tabview.tab("ADD STUDENT"),text="LAST NAME:",text_color="black",font=("Helvetica",15))
@@ -328,7 +329,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.slabel5.place(x=480,y=205)
         self.slabel6 =customtkinter.CTkLabel(self.tabview.tab("ADD STUDENT"),text="YEAR LEVEL:",text_color="black",font=("Helvetica",15))
         self.slabel6.place(x=480,y=295)
-# ENTRIES
+    # ENTRIES
         self.slNameent = customtkinter.CTkEntry(self.tabview.tab("ADD STUDENT"),placeholder_text="e.g. PARAGOSO",placeholder_text_color="lightgoldenrod4",border_color="lightgoldenrod2",fg_color="lightgoldenrod2",width=230,height=35)
         self.slNameent.place(x=180,y=120)
         self.sfNameent = customtkinter.CTkEntry(self.tabview.tab("ADD STUDENT"),placeholder_text="e.g. EDA GRACE",placeholder_text_color="lightgoldenrod4",border_color="lightgoldenrod2",fg_color="lightgoldenrod2",width=230,height=35)
@@ -343,19 +344,19 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.syearlevel_var = customtkinter.StringVar(value="Select")
         self.syearlevelOM = customtkinter.CTkOptionMenu(self.tabview.tab("ADD STUDENT"),variable=self.syearlevel_var,values=["1ST YEAR","2ND YEAR","3RD YEAR","4TH YEAR"],text_color="black",dynamic_resizing=TRUE,width=230,fg_color="lightgoldenrod2",button_color="lightgoldenrod4",button_hover_color="lightgoldenrod4",dropdown_fg_color="lightgoldenrod2",dropdown_hover_color="lightgoldenrod3")
         self.syearlevelOM.place(x=610,y=295)
-# SAVE BUTTON TO ADD STUDENT
+    # SAVE BUTTON TO ADD STUDENT
         self.ssavebtn = customtkinter.CTkButton(self.tabview.tab("ADD STUDENT"),text="ADD STUDENT",font=("Helvetica",14),text_color="black",fg_color="lightgoldenrod2",border_width=2,hover=True,hover_color= "lightgoldenrod1",corner_radius=10,border_color= "lightgoldenrod2",width=100,height=35)
         self.ssavebtn.place(x=400,y=390)
 
 #**************************************************************** STUDENTS LIST TABVIEW ****************************************************************#
         self.elabel7 =customtkinter.CTkLabel(self.tabview.tab("STUDENTS LIST"),text="STUDENTS LIST:",text_color="black",font=("Helvetica",16,"bold"))
         self.elabel7.place(x=45,y=45)
-# SEARCH
+    # SEARCH
         self.elabel8 =customtkinter.CTkLabel(self.tabview.tab("STUDENTS LIST"),text="SEARCH:",text_color="black",font=("Helvetica",13))
         self.elabel8.place(x=610,y=45)
         self.ssearchentry = customtkinter.CTkEntry(self.tabview.tab("STUDENTS LIST"),placeholder_text="e.g. 2021-1574",placeholder_text_color="lightgoldenrod4",border_color="lightgoldenrod2",fg_color="lightgoldenrod2",width=160,height=35)
         self.ssearchentry.place(x=680,y=45)
-# STUDENT LIST TABLE
+# ******** LIST OF STUDENTS
         self.tablestyle()
         self.table_frame = tk.Frame(self.tabview.tab("STUDENTS LIST"),bg="white")
         self.table_frame.place(x=55,y=125,width=1000,height=360)
@@ -380,7 +381,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.stable.insert("", tk.END, text="1", values=("2021-1574","PARAGOSO", "EDA GRACE","JUTBA","BSCS","2ND YEAR"))
         self.stable.insert("", tk.END, text="2", values=("2021-0622","SAYSON", "NANCY","MAHINAY","BSCS","2ND YEAR"))
         self.stable.pack(fill=BOTH,expand=True)
-# BUTTONS
+    # BUTTONS
         self.eeditbtn = customtkinter.CTkButton(self.tabview.tab("STUDENTS LIST"),text="EDIT STUDENT",font=("Helvetica",14),text_color="black",fg_color="lightgoldenrod2",border_width=2,hover= True,hover_color= "lightgoldenrod1",corner_radius=10,border_color= "lightgoldenrod2",width=100,height=35)
         self.eeditbtn.place(x=585,y=405)
         self.edeletebtn = customtkinter.CTkButton(self.tabview.tab("STUDENTS LIST"),text="delete student",font=("Helvetica",14),text_color="white",fg_color="red2",border_width=2,hover= True,hover_color= "red",corner_radius=10,border_color= "red2",width=100,height=35)
@@ -395,32 +396,31 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.tabview.configure(text_color="black",fg_color="light yellow",segmented_button_fg_color="lightgoldenrod3",segmented_button_selected_color="light yellow",segmented_button_unselected_color="lightgoldenrod3",segmented_button_unselected_hover_color="light yellow",segmented_button_selected_hover_color="light yellow")
         self.tabview.add("ADD COURSE")  
         self.tabview.add("COURSES LIST") 
-        self.tabview.set("COURSES LIST") 
-# LABELS
+    # LABELS
         self.clabel1 =customtkinter.CTkLabel(self.tabview.tab("ADD COURSE") ,text="COURSE INFORMATON:",text_color="black",font=("Helvetica",16,"bold"))
         self.clabel1.place(x=45,y=45)
         self.clabel2 =customtkinter.CTkLabel(self.tabview.tab("ADD COURSE") ,text="COURSE CODE:",text_color="black",font=("Helvetica",15))
         self.clabel2.place(x=45,y=120)
         self.clabel3 =customtkinter.CTkLabel(self.tabview.tab("ADD COURSE") ,text="COURSE NAME:",text_color="black",font=("Helvetica",15))
         self.clabel3.place(x=45,y=190)
-# ENTRIES
+    # ENTRIES
         self.ccodeent = customtkinter.CTkEntry(self.tabview.tab("ADD COURSE"),placeholder_text="e.g. BSCS",placeholder_text_color="lightgoldenrod4",border_color="lightgoldenrod2",fg_color="lightgoldenrod2",width=230,height=35)
         self.ccodeent.place(x=180,y=120)
         self.cnameent = customtkinter.CTkEntry(self.tabview.tab("ADD COURSE"),placeholder_text="e.g. BACHELOR OF SCIENCE IN COMPUTER SCIENCE",placeholder_text_color="lightgoldenrod4",border_color="lightgoldenrod2",fg_color="lightgoldenrod2",width=660,height=35)
         self.cnameent.place(x=180,y=190)
-# SAVE BUTTON TO ADD COURSE
+    # SAVE BUTTON TO ADD COURSE
         self.ssavebtn = customtkinter.CTkButton(self.tabview.tab("ADD COURSE"),text="ADD COURSE",font=("Helvetica",14),text_color="black",fg_color="lightgoldenrod2",border_width=2,hover=True,hover_color= "lightgoldenrod1",corner_radius=10,border_color= "lightgoldenrod2",width=100,height=35)
         self.ssavebtn.place(x=400,y=260)
 
 #**************************************************************** COURSES LIST TABVIEW ****************************************************************#
         self.elabel7 =customtkinter.CTkLabel(self.tabview.tab("COURSES LIST"),text="COURSES LIST:",text_color="black",font=("Helvetica",16,"bold"))
         self.elabel7.place(x=45,y=45)
-# SEARCH
+    # SEARCH
         self.elabel8 =customtkinter.CTkLabel(self.tabview.tab("COURSES LIST"),text="SEARCH:",text_color="black",font=("Helvetica",13))
         self.elabel8.place(x=610,y=45)
         self.csearchentry = customtkinter.CTkEntry(self.tabview.tab("COURSES LIST"),placeholder_text="e.g. BSCS",placeholder_text_color="lightgoldenrod4",border_color="lightgoldenrod2",fg_color="lightgoldenrod2",width=160,height=35)
         self.csearchentry.place(x=680,y=45)
-# TABLE
+    # ******** LIST OF COURSES
         self.tablestyle()
         self.table_frame = tk.Frame(self.tabview.tab("COURSES LIST"),bg="white")
         self.table_frame.place(x=55,y=120,width=1000,height=290)
@@ -439,7 +439,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.ctable.insert("", tk.END, text="3", values=("BSIS","BACHELOR OF SCIENCE IN INFORMATION SYSTEM"))
         self.ctable.insert("", tk.END, text="4", values=("BSIT","BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY"))
         self.ctable.pack(fill=BOTH,expand=True)
-# BUTTONS
+    # BUTTONS
         self.eeditbtn = customtkinter.CTkButton(self.tabview.tab("COURSES LIST"),text="EDIT COURSE",font=("Helvetica",14),text_color="black",fg_color="lightgoldenrod2",border_width=2,hover= True,hover_color= "lightgoldenrod1",corner_radius=10,border_color= "lightgoldenrod2",width=100,height=35)
         self.eeditbtn.place(x=595,y=345)
         self.edeletebtn = customtkinter.CTkButton(self.tabview.tab("COURSES LIST"),text="delete course",font=("Helvetica",14),text_color="white",fg_color="red2",border_width=2,hover= True,hover_color= "red",corner_radius=10,border_color= "red2",width=100,height=35)
