@@ -101,6 +101,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.tabview.configure(text_color="black",fg_color="light yellow",segmented_button_fg_color="lightgoldenrod3",segmented_button_selected_color="light yellow",segmented_button_unselected_color="lightgoldenrod3",segmented_button_unselected_hover_color="light yellow",segmented_button_selected_hover_color="light yellow")
         self.tabview.add("ADD EVENT")  
         self.tabview.add("EVENTS LIST") 
+        self.tabview.add("EVENT LOCATION") 
         self.tabview.set("EVENTS LIST") 
     # LABELS
         self.elabel1 =customtkinter.CTkLabel(self.tabview.tab("ADD EVENT"),text="EVENT INFORMATION:",text_color="black",font=("Helvetica",16,"bold"))
@@ -202,6 +203,65 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.edeletebtn.place(x=745,y=405)
         self.eupdatebtn = customtkinter.CTkButton(self.tabview.tab("EVENTS LIST"),text="REFRESH",font=("Helvetica",14),text_color="black",fg_color="lightgoldenrod2",border_width=2,hover= True,hover_color= "lightgoldenrod1",corner_radius=10,border_color= "lightgoldenrod2",width=100,height=35,command=self.update_event_table)
         self.eupdatebtn.place(x=510,y=405)
+
+#**************************************************************** EVENT LOCATIONS TABVIEW ****************************************************************#
+    # LABELS
+        self.llabel1 =customtkinter.CTkLabel(self.tabview.tab("EVENT LOCATION"),bg_color="light yellow",text="EVENT ID:",text_color="black",font=("Helvetica",15))
+        self.llabel1.place(x=45,y=50)
+        self.llabel2 =customtkinter.CTkLabel(self.tabview.tab("EVENT LOCATION"),bg_color="light yellow",text="EVENT NAME:",text_color="black",font=("Helvetica",15))
+        self.llabel2.place(x=460,y=50)
+    # ENTRIES
+        conn = sqlite3.connect('attendancesystem.db')
+        cursor = conn.cursor() 
+        cursor.execute("SELECT DISTINCT event_ID FROM events")
+        event_list = [r[0] for r in cursor.fetchall()]
+        conn.commit()
+        conn.close()
+        self.lname_var = tkinter.StringVar(value="Select")
+        self.lnameOM = customtkinter.CTkOptionMenu(self.tabview.tab("EVENT LOCATION"),bg_color="light yellow",variable=self.lname_var,values=event_list,text_color="black",dynamic_resizing=TRUE,width=250,fg_color="lightgoldenrod2",button_color="lightgoldenrod4",button_hover_color="lightgoldenrod4",dropdown_fg_color="lightgoldenrod2",dropdown_hover_color="lightgoldenrod3")
+        self.lnameOM.place(x=150,y=50)
+        self.elocation = customtkinter.CTkEntry(self.tabview.tab("EVENT LOCATION"),bg_color="light yellow",placeholder_text="e.g. EVENT LOCATION",placeholder_text_color="lightgoldenrod4",border_color="lightgoldenrod2",fg_color="lightgoldenrod2",width=250,height=35)
+        self.elocation.place(x=590,y=50)
+    # SAVE BUTTON
+        self.lsavebtn = customtkinter.CTkButton(self.tabview.tab("EVENT LOCATION"),text="ADD LOCATION",bg_color="light yellow",font=("Helvetica",14),text_color="black",fg_color="lightgoldenrod2",border_width=2,hover=True,hover_color= "lightgoldenrod1",corner_radius=10,border_color= "lightgoldenrod2",width=100,height=35,command=self.add_location)
+        self.lsavebtn.place(x=390,y=130)
+
+    # EVENT LOCATIONS TABLE
+        self.tablestyle()
+        self.locationframe = tk.Frame(self.tabview.tab("EVENT LOCATION"), background="light yellow")
+        self.locationframe.place(x=55,y=250,width=1000,height=330)
+        self.y_scroll = customtkinter.CTkScrollbar(self.locationframe, orientation=tk.VERTICAL, button_color="lightgoldenrod4", button_hover_color="lightgoldenrod3", fg_color="light yellow")
+        self.y_scroll.pack(side=RIGHT, fill=Y)
+        self.ltable = ttk.Treeview(self.locationframe, columns=("event_ID", "eventLocation"), show="headings", yscrollcommand=self.y_scroll.set)
+        self.ltable.pack(fill=BOTH, expand=True)
+        self.y_scroll.configure(command=self.ltable.yview)
+        # HEADINGS
+        self.ltable.heading("event_ID", text="EVENT ID")
+        self.ltable.heading("eventLocation", text="EVENT LOCATION")
+        # COLUMNS
+        self.ltable.column("event_ID", width=100, anchor=CENTER)
+        self.ltable.column("eventLocation", width=100, anchor=CENTER)
+        # DATA
+        conn = sqlite3.connect('attendancesystem.db')
+        cursor = conn.cursor()
+        display_data_query = cursor.execute("SELECT * FROM event_locations")
+        fetch = display_data_query.fetchall()
+        for data in fetch:
+            self.ltable.insert('', 'end', values=(data[0], data[1]))
+        conn.commit()
+        conn.close()
+
+    # UPDATE EVENT LOCATION TABLE
+    def update_elocation_table(self):
+            conn = sqlite3.connect('attendancesystem.db')
+            cursor = conn.cursor()
+            self.ltable.delete(*self.ltable.get_children())
+            display_data_query = cursor.execute("SELECT * FROM event_locations")
+            fetch = display_data_query.fetchall()
+            for data in fetch:
+                self.ltable.insert('', 'end', values=(data[0], data[1]))
+                conn.commit()
+            conn.close()
 
     # UPDATE EVENT TABLE
     def update_event_table(self):
@@ -332,7 +392,6 @@ class AttendanceSystemApp(customtkinter.CTk):
             print("Parsed end date:", end_date)
 
             return start_date <= current_datetime <= end_date
-
 
         def sign_in():
             student_id = self.aIDentry.get()
@@ -629,6 +688,41 @@ class AttendanceSystemApp(customtkinter.CTk):
             self.yearOM2_var.set(year2)
             self.schoolyearOM_var.set(selected_data[4])
             self.semesterOM_var.set(selected_data[5])
+
+# ******** ADD LOCATION
+    def clear_location_inputs(self):
+        self.lname_var.set('SELECT')
+        self.elocation.delete(0, END)
+
+    def add_location(self):
+        conn = sqlite3.connect('attendancesystem.db')
+        cursor = conn.cursor() 
+        event_ID = self.lname_var.get()
+        location_name = self.elocation.get().upper()
+
+        if event_ID=='' or location_name=='': tkMessageBox.showwarning("Warning","Please fill the empty field!")
+        else:
+            if self.location_exists(cursor, event_ID):
+                tkMessageBox.showerror("Error", "There is already a location with the same event ID in the system!")
+            else:
+                data_insert_query = '''INSERT INTO event_locations (event_ID,eventLocation) VALUES (?,?)'''
+                data_insert_tuple = (event_ID,location_name)
+                cursor.execute(data_insert_query,data_insert_tuple)
+                conn.commit()
+                tkMessageBox.showinfo("Message","Event Location added successfully")
+        conn.commit()
+        self.update_elocation_table()
+        self.clear_location_inputs()
+
+    # CHECK IF THE SAME LOCATION WITH THE SAME EVENT ID ALREADY EXISTS IN THE DATABASE
+    def location_exists(self,cursor, event_ID):
+        conn = sqlite3.connect('attendancesystem.db')
+        cursor = conn.cursor() 
+        query = '''SELECT * FROM event_locations WHERE event_ID = ?'''
+        cursor.execute(query, (event_ID,))
+        if cursor.fetchone():
+            return True
+        return False
 
 #**************************************************************** ADD STUDENT TABVIEW ****************************************************************#
     def studentcom(self):
