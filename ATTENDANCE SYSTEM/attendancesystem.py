@@ -467,7 +467,7 @@ class AttendanceSystemApp(customtkinter.CTk):
             self.atable.insert('', 'end', values=(data[0], data[1], data[2], data[3]))
         conn.commit()
 
-        def update_student_table(event_id):
+        def update_attendance_table(event_id):
             conn = sqlite3.connect('attendancesystem.db')
             cursor = conn.cursor()
             self.atable.delete(*self.atable.get_children())
@@ -514,14 +514,14 @@ class AttendanceSystemApp(customtkinter.CTk):
                         query = "UPDATE {} SET signout_datetime = datetime('now') WHERE student_ID = ? AND event_ID = ?".format(event_id)
                         cursor.execute(query, (student_id, event_id))
                         conn.commit()
-                        update_student_table(event_id)
+                        update_attendance_table(event_id)
                         tkMessageBox.showinfo("Signed Out", "The student has been signed out successfully.")
             else:
                 if sign_type == 'IN':
                     query = "INSERT INTO {} (student_ID, event_ID, signin_datetime, signout_datetime) VALUES (?, ?, datetime('now'), '-')".format(event_id)
                     cursor.execute(query, (student_id, event_id))
                     conn.commit()
-                    update_student_table(event_id)
+                    update_attendance_table(event_id)
                     tkMessageBox.showinfo("Signed In", "The student has been signed in successfully.")
                 else:
                     tkMessageBox.showinfo("Message", "Attendance record not found.")
