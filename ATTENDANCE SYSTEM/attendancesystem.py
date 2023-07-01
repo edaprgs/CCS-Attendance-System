@@ -346,7 +346,7 @@ class AttendanceSystemApp(customtkinter.CTk):
                     return
                 event_id = self.etable.item(self.etable.selection()[0], "values")[0]
                 if not validate_attendance_time(event_id):
-                    tkMessageBox.showerror("Error", "Attendance sign-in is currently not allowed. It is possible that you have already signed in on the same day.")
+                    tkMessageBox.showerror("Error", "Attendance sign-in is currently not allowed. Please verify the sign-in duration or the appropriate day for signing in")
                     return
                 add_attendance(student_id, 'IN', event_id)
                 return
@@ -363,7 +363,7 @@ class AttendanceSystemApp(customtkinter.CTk):
                     return 
                 event_id = self.etable.item(self.etable.selection()[0], "values")[0]
                 if not validate_attendance_time(event_id):
-                    tkMessageBox.showerror("Error", "Attendance sign-out is currently not allowed. It is possible that you have already signed out on the same day.")
+                    tkMessageBox.showerror("Error", "Attendance sign-out is currently not allowed. Please verify the sign-out duration or the appropriate day for signing out")
                     return
                 add_attendance(student_id, 'OUT', event_id)
                 return
@@ -376,16 +376,16 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.tabview.add("EVENT ATTENDANCE")  
         self.backbtn = customtkinter.CTkButton(self.attendanceframe, text="RETURN", text_color="white", font=("Arial", 18, "bold"), fg_color="gray12", bg_color="light yellow", hover=True, hover_color="gray18", corner_radius=10, width=100, height=40, command=go_back)
         self.backbtn.place(x=50, y=70)
-        self.aIDentry = customtkinter.CTkEntry(self.attendanceframe,font=("Arial",35,"bold"),placeholder_text="####-####",bg_color="light yellow",placeholder_text_color="lightgoldenrod4",border_color="lightgoldenrod2",fg_color="lightgoldenrod2",width=450,height=60,justify="center")
+        self.aIDentry = customtkinter.CTkEntry(self.attendanceframe,font=("Arial",45,"bold"),placeholder_text="####-####",bg_color="light yellow",placeholder_text_color="lightgoldenrod4",border_color="lightgoldenrod2",fg_color="lightgoldenrod2",width=450,height=80,justify="center")
         self.aIDentry.place(x=225,y=120)
         signinbtn =customtkinter.CTkButton(self.attendanceframe,text="SIGN IN",bg_color="light yellow",text_color="white",font=("Arial",20,"bold"),fg_color="lightgoldenrod4",hover=True,hover_color= "khaki4",corner_radius=10,width=205,height=50,command=sign_in)
-        signinbtn.place(x=225,y=200)
+        signinbtn.place(x=225,y=220)
         signoutbtn =customtkinter.CTkButton(self.attendanceframe,text="SIGN OUT",bg_color="light yellow",text_color="white",font=("Arial",20,"bold"),fg_color="gray12",hover=True,hover_color= "gray18",corner_radius=10,width=205,height=50,command=sign_out)
-        signoutbtn.place(x=470,y=200)
+        signoutbtn.place(x=470,y=220)
         # DISPLAY ATTENDANCE LIST
         self.tablestyle()
         self.tableframe = tk.Frame(self.tabview.tab("EVENT ATTENDANCE"), background="light yellow")
-        self.tableframe.place(x=55,y=270,width=1000,height=320)
+        self.tableframe.place(x=55,y=290,width=1000,height=290)
         self.y_scroll = customtkinter.CTkScrollbar(self.tableframe, orientation=tk.VERTICAL, button_color="lightgoldenrod4", button_hover_color="lightgoldenrod3", fg_color="light yellow")
         self.y_scroll.pack(side=RIGHT, fill=Y)
         self.atable = ttk.Treeview(self.tableframe, columns=("student_ID", "event_ID", "signin_datetime", "signout_datetime"), show="headings", yscrollcommand=self.y_scroll.set)
