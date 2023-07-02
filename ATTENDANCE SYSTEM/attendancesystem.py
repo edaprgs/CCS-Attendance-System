@@ -24,12 +24,13 @@ class AttendanceSystemApp(customtkinter.CTk):
     # ESTABLISH DATABASE CONNECTION
         conn = sqlite3.connect('attendancesystem.db')
         cursor = conn.cursor()
-     # CREATE COURSE TABLE
+    # CREATE COURSE TABLE
         create_course = '''CREATE TABLE IF NOT EXISTS course (
             course_code	TEXT NOT NULL,
             courseName	TEXT NOT NULL,
             PRIMARY KEY(course_code))'''
         cursor.execute(create_course)
+
     # CREATE STUDENT TABLE
         create_student = '''CREATE TABLE IF NOT EXISTS events (
             event_ID	INTEGER NOT NULL,
@@ -40,6 +41,7 @@ class AttendanceSystemApp(customtkinter.CTk):
             semester	TEXT NOT NULL,
             PRIMARY KEY(event_ID AUTOINCREMENT))'''
         cursor.execute(create_student)
+
     # CREATE EVENT TABLE
         create_event = '''CREATE TABLE IF NOT EXISTS events (
             event_ID	TEXT NOT NULL,
@@ -50,6 +52,7 @@ class AttendanceSystemApp(customtkinter.CTk):
             semester	TEXT NOT NULL,
             PRIMARY KEY(event_ID))'''
         cursor.execute(create_event)
+
     # CREATE EVENT LOCATIONS TABLE
         create_eventlocation = '''CREATE TABLE IF NOT EXISTS event_locations (
             event_ID	TEXT NOT NULL,
@@ -57,6 +60,7 @@ class AttendanceSystemApp(customtkinter.CTk):
             PRIMARY KEY(event_ID),
             FOREIGN KEY(event_ID) REFERENCES event (event_ID))'''
         cursor.execute(create_eventlocation)
+
     # CREATE ATTENDANCE TABLE 
         create_attendance = '''CREATE TABLE IF NOT EXISTS attendance (
             student_ID	TEXT NOT NULL,
@@ -69,7 +73,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         cursor.execute(create_attendance)
         conn.commit()
 
-#**************************************************************** MAIN SCREEN ****************************************************************#
+#**************************************************************** MAIN WINDOW ****************************************************************#
     # BACKGROUND 
         self.mainframe = tk.Frame(self,width=1000,height=1000,background="gray1")
         self.mainframe.pack(fill="both")
@@ -317,10 +321,9 @@ class AttendanceSystemApp(customtkinter.CTk):
         if not self.etable.selection():
             tkMessageBox.showerror("Error", "No item selected. Please select an event from the table.")
             return
-        # RETRIEVE THE SELECTED EVENT ID FROM THE TABLE
+        # RETRIEVE THE SELECTED EVENT ID AND EVENT NAME FROM THE TABLE
         selected_item = self.etable.selection()[0]
         event_id = self.etable.item(selected_item, "values")[0]
-        event_name = self.etable.item(selected_item, "values")[1]
         self.etable.focus()
 
         def go_back():
@@ -347,49 +350,69 @@ class AttendanceSystemApp(customtkinter.CTk):
             print("Parsed start date:", start_date)
             print("Parsed end date:", end_date)
 
-            return start_date <= current_datetime <= end_date
+            return start_date <= current_datetime <= end_date or current_datetime.date() == end_date.date()
 
         def sign_in():
             student_id = self.aIDentry.get()
             if student_id == '':
                 tkMessageBox.showwarning("Warning", "Please fill the empty field!")
+            # RETRIEVE THE LOCATION BASED ON THE EVENT ID
+            location_query = "SELECT eventLocation FROM event_locations WHERE event_ID = ?"
+            cursor.execute(location_query, (event_id,))
+            location = cursor.fetchone()[0]
+
+            if location is None:
+                tkMessageBox.showerror("Error", "Location not found for the selected event.")
+                return    
             else:
                 if not validate_student_id(student_id):
                     tkMessageBox.showerror("Error", "Invalid student ID format. Please use the format 0000-0000.")
+                    clear_inputs()
                     return
                 if not check_student_exists(student_id):
                     tkMessageBox.showerror("Error", "Student ID does not exist.")
+                    clear_inputs()
                     return
                 if not validate_attendance_time(event_id):
                     tkMessageBox.showerror("Error", "Attendance sign-in is currently not allowed. Please verify the sign-in duration or the appropriate day for signing in")
+                    clear_inputs()
                     return
-                add_attendance(student_id, 'IN', event_id, event_name)
-                return
+                add_attendance(student_id, 'IN', location)
 
         def sign_out():
             student_id = self.aIDentry.get()
             if student_id == '':
                 tkMessageBox.showwarning("Warning", "Please fill the empty field!")
+            # RETRIEVE THE LOCATION BASED ON THE EVENT ID
+            location_query = "SELECT eventLocation FROM event_locations WHERE event_ID = ?"
+            cursor.execute(location_query, (event_id,))
+            location = cursor.fetchone()[0]
+
+            if location is None:
+                tkMessageBox.showerror("Error", "Location not found for the selected event.")
+                return
             else:
                 if not validate_student_id(student_id):
                     tkMessageBox.showerror("Error", "Invalid student ID format. Please use the format 0000-0000.")
+                    clear_inputs()
                     return
                 if not check_student_exists(student_id):
                     tkMessageBox.showerror("Error", "Student ID does not exist.")
+                    clear_inputs()
                     return
                 if not validate_attendance_time(event_id):
                     tkMessageBox.showerror("Error", "Attendance sign-out is currently not allowed. Please verify the sign-out duration or the appropriate day for signing out")
+                    clear_inputs()
                     return
-                add_attendance(student_id, 'OUT', event_id, event_name)
-                return
-
+                add_attendance(student_id, 'OUT', location)
+        
         self.attendanceframe = tk.Frame(self.mainframe, width=1150, height=810, background="gray1")
         self.attendanceframe.place(x=65, y=100)
         self.tabview = customtkinter.CTkTabview(master=self.attendanceframe, width=900, height=555)
         self.tabview.place(x=0, y=20)
         self.tabview.configure(text_color="black", fg_color="light yellow", segmented_button_fg_color="lightgoldenrod3", segmented_button_selected_color="light yellow", segmented_button_unselected_color="lightgoldenrod3", segmented_button_unselected_hover_color="light yellow", segmented_button_selected_hover_color="light yellow")
         self.tabview.add("EVENT ATTENDANCE")  
-        self.backbtn = customtkinter.CTkButton(self.attendanceframe, text="RETURN", text_color="white", font=("Arial", 18, "bold"), fg_color="gray12", bg_color="light yellow", hover=True, hover_color="gray18", corner_radius=10, width=100, height=40, command=go_back)
+        self.backbtn = customtkinter.CTkButton(self.attendanceframe, text="⬅ RETURN", text_color="black", font=("Arial", 18, "bold"), fg_color="lightgoldenrod2", bg_color="light yellow", hover=True, hover_color="lightgoldenrod1", corner_radius=10, width=100, height=40, command=go_back)
         self.backbtn.place(x=50, y=70)
         self.aIDentry = customtkinter.CTkEntry(self.attendanceframe,font=("Arial",45,"bold"),placeholder_text="####-####",bg_color="light yellow",placeholder_text_color="lightgoldenrod4",border_color="lightgoldenrod2",fg_color="lightgoldenrod2",width=450,height=80,justify="center")
         self.aIDentry.place(x=225,y=120)
@@ -401,9 +424,9 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.tablestyle()
         self.tableframe = tk.Frame(self.tabview.tab("EVENT ATTENDANCE"), background="light yellow")
         self.tableframe.place(x=55,y=290,width=1000,height=290)
-        self.y_scroll = customtkinter.CTkScrollbar(self.tableframe, orientation=tk.VERTICAL, button_color="lightgoldenrod4", button_hover_color="lightgoldenrod3", fg_color="light yellow")
+        self.y_scroll = customtkinter.CTkScrollbar(self.tableframe, orientation=VERTICAL, button_color="lightgoldenrod4", button_hover_color="lightgoldenrod3", fg_color="light yellow")
         self.y_scroll.pack(side=RIGHT, fill=Y)
-        self.atable = ttk.Treeview(self.tableframe, columns=("eventName","student_ID", "slastName", "signin_datetime", "signout_datetime"), show="headings", yscrollcommand=self.y_scroll.set)
+        self.atable = ttk.Treeview(self.tableframe, columns=("eventName","student_ID", "slastName", "signin_datetime", "signout_datetime","elocation"), show="headings", yscrollcommand=self.y_scroll.set)
         self.atable.pack(fill=BOTH, expand=True)
         self.y_scroll.configure(command=self.atable.yview)
         # HEADINGS
@@ -412,24 +435,27 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.atable.heading("slastName", text="NAME")
         self.atable.heading("signin_datetime", text="SIGN IN DATE/TIME")
         self.atable.heading("signout_datetime", text="SIGN OUT DATE/TIME")
+        self.atable.heading("elocation", text="LOCATION")
         # COLUMNS
-        self.atable.column("eventName", width=100, anchor=CENTER)
-        self.atable.column("student_ID", width=100, anchor=CENTER)
-        self.atable.column("slastName", width=100, anchor=CENTER)
+        self.atable.column("eventName", width=80, anchor=CENTER)
+        self.atable.column("student_ID", width=50, anchor=CENTER)
+        self.atable.column("slastName", width=80, anchor=CENTER)
         self.atable.column("signin_datetime", width=150, anchor=CENTER)
         self.atable.column("signout_datetime", width=150, anchor=CENTER)
-        # DATA
-        display_data_query = cursor.execute("SELECT events.eventName, attendance.student_ID, student.lastName, attendance.signin_datetime, attendance.signout_datetime FROM events JOIN attendance ON events.event_ID = attendance.event_ID JOIN student ON attendance.student_ID = student.student_ID WHERE events.event_ID = ?")
+        self.atable.column("elocation", width=100, anchor=CENTER)
+        # RETRIEVE AND DISPLAY ATTENDANCE RECORDS FOR THE SELECTED EVENT 
+        self.atable.delete(*self.atable.get_children())
+        display_data_query = cursor.execute("SELECT events.eventName, student.student_ID, student.lastName, attendance.signin_datetime, attendance.signout_datetime, eventLocation FROM attendance JOIN student ON attendance.student_ID = student.student_ID JOIN events ON attendance.event_ID = events.event_ID JOIN event_locations ON events.event_ID = event_locations.event_ID WHERE attendance.event_ID = ? ORDER BY student.lastName ASC", (event_id,))
         fetch = display_data_query.fetchall()
         for data in fetch:
-            self.atable.insert('', 'end', values=(data[0], data[1], data[2], data[3], data[4]))
+            self.atable.insert('', 'end', values=(data[0], data[1], data[2], data[3], data[4], data[5]))
         conn.commit()
 
-        def update_attendance_table():
+        def update_attendance_table(event_id):
             conn = sqlite3.connect('attendancesystem.db')
             cursor = conn.cursor()
             self.atable.delete(*self.atable.get_children())
-            display_data_query = cursor.execute("SELECT events.eventName, attendance.student_ID, student.lastName, attendance.signin_datetime, attendance.signout_datetime FROM events JOIN attendance ON events.event_ID = attendance.event_ID JOIN student ON attendance.student_ID = student.student_ID WHERE events.event_ID = ?")
+            display_data_query = cursor.execute("SELECT events.eventName, student.student_ID, student.lastName, attendance.signin_datetime, attendance.signout_datetime, eventLocation FROM attendance JOIN student ON attendance.student_ID = student.student_ID JOIN events ON attendance.event_ID = events.event_ID JOIN event_locations ON events.event_ID = event_locations.event_ID WHERE attendance.event_ID = ? ORDER BY student.lastName ASC", (event_id,))
             fetch = display_data_query.fetchall()
             for data in fetch:
                 self.atable.insert('', 'end', values=(data[0], data[1], data[2], data[3], data[4]))
@@ -442,10 +468,10 @@ class AttendanceSystemApp(customtkinter.CTk):
                 return False
             return True
         
+        # CHECK IF STUDENT ID EXISTS IN THE STUDENT TABLE
         def check_student_exists(student_id):
             conn = sqlite3.connect('attendancesystem.db')
             cursor = conn.cursor()
-            # CHECK IF STUDENT ID EXISTS IN THE STUDENT TABLE
             query = "SELECT student_ID FROM student WHERE student_ID = ?"
             cursor.execute(query, (student_id,))
             result = cursor.fetchone()
@@ -454,98 +480,110 @@ class AttendanceSystemApp(customtkinter.CTk):
                 return True
             return False
         
-        def add_attendance(student_id, sign_type):
+        def add_attendance(student_id, sign_type, location):
             conn = sqlite3.connect('attendancesystem.db')
             cursor = conn.cursor()
 
-            # Retrieve the event ID based on the selected event name
-            selected_event_name = self.etable.item(self.etable.focus())['values'][1]  # Assuming the event name is in the second column
-            event_query = "SELECT event_ID FROM events WHERE eventName = ?"
-            cursor.execute(event_query, (selected_event_name,))
+            # RETRIEVE THE EVENT ID BASED ON THE SELECTED EVENT ON THE TABLE
+            selected_event_name = self.etable.item(self.etable.focus())['values'][1]
+            selected_event_location = self.etable.item(self.etable.focus())['values'][6]
+            event_query = "SELECT events.event_ID FROM events JOIN event_locations ON events.event_ID = event_locations.event_ID WHERE events.eventName = ? AND event_locations.eventLocation = ?"
+            cursor.execute(event_query, (selected_event_name, selected_event_location))
             event_id = cursor.fetchone()[0]
 
-            exists_query = "SELECT * FROM attendance WHERE student_ID = ? AND event_ID = ?"
-            cursor.execute(exists_query, (student_id, event_id))
+            exists_query = "SELECT attendance.* FROM attendance JOIN events ON attendance.event_ID = events.event_ID JOIN event_locations ON events.event_ID = event_locations.event_ID WHERE attendance.student_ID = ? AND attendance.event_ID = ? AND event_locations.eventLocation = ?"
+            cursor.execute(exists_query, (student_id, event_id, location))
             existing_record = cursor.fetchone()
+
+            # PRINT VALUES FOR DEBUGGING
+            print("Event ID:", event_id)
+            print("Event Name:", selected_event_name)
+            print("Event Location:",selected_event_location)
 
             if existing_record:
                 if sign_type == 'IN':
-                    tkMessageBox.showinfo("Sign-in Attendance Recorded", "Sign-in Attendance for this student at this day is already recorded.")
+                    tkMessageBox.showerror("Sign-in Attendance Recorded", "Sign-in Attendance for this student at this day and location is already recorded.")
                 elif sign_type == 'OUT':
                     existing_signout = existing_record[3]
                     if existing_signout != '-':
-                        tkMessageBox.showinfo("Sign-out Attendance Recorded", "Sign-out Attendance for this student at this day is already recorded.")
+                        tkMessageBox.showerror("Sign-out Attendance Recorded", "Sign-out Attendance for this student at this day and location is already recorded.")
                     else:
                         query = "UPDATE attendance SET signout_datetime = datetime('now') WHERE student_ID = ? AND event_ID = ?"
                         cursor.execute(query, (student_id, event_id))
                         conn.commit()
                         update_attendance_table(event_id)
                         tkMessageBox.showinfo("Signed Out", "The student has been signed out successfully.")
+                conn.close()
+                clear_inputs()
+                return
+
+            if sign_type == 'IN':
+                query = "INSERT INTO attendance (student_ID, event_ID, signin_datetime, signout_datetime) VALUES (?, ?, datetime('now'), '-')"
+                cursor.execute(query, (student_id, event_id))
+                conn.commit()
+                update_attendance_table(event_id)
+                tkMessageBox.showinfo("Signed In", "The student has been signed in successfully.")
             else:
-                if sign_type == 'IN':
-                    query = "INSERT INTO attendance (student_ID, event_ID, signin_datetime, signout_datetime) VALUES (?, ?, datetime('now'), '-')"
-                    cursor.execute(query, (student_id, event_id))
-                    conn.commit()
-                    update_attendance_table(event_id)
-                    tkMessageBox.showinfo("Signed In", "The student has been signed in successfully.")
-                else:
-                    tkMessageBox.showinfo("Message", "Attendance record not found.")
-            clear_inputs()
+                tkMessageBox.showerror("Message", "Attendance record not found.")
+
             conn.close()
+            clear_inputs()
 
         def clear_inputs():
                 self.aIDentry.delete(0, END)
+
+
+    
 
 # ******** DELETE EVENT
     def delete_event(self):
         if not self.etable.selection():
             tkMessageBox.showerror("Error", "No item selected. Please select an event from the table.")
             return
+
         decision = tkMessageBox.askquestion("Warning", "Are you sure you want to delete the selected event?")
         if decision != 'yes':
             return
         else:
-            #selected_item = self.etable.selection()[0]
-            #event_id = str(self.etable.item(selected_item)['values'][0])
             selected_item = self.etable.focus()
             item_values = self.etable.item(selected_item)['values']
             event_id = item_values[0]
             try:
                 conn = sqlite3.connect('attendancesystem.db')
                 cursor = conn.cursor()
+
                 # CHECK IF THE EVENT HAS ATTENDANCE RECORDS
                 query = "SELECT COUNT(*) FROM attendance WHERE event_ID = ?"
-                cursor.execute(query,(event_id))
-                attendance_count = cursor.fetchone()
+                cursor.execute(query, (event_id,))
+                attendance_count = cursor.fetchone()[0]
                 if attendance_count > 0:
-                    tkMessageBox.showwarning("Warning", "The event table has attendance records. Event cannot be deleted.")
+                    tkMessageBox.showerror("Error", "The event has attendance records. Event cannot be deleted.")
                     conn.close()
                     return
-                
-                # CHECK IF THE START DATE HAS ALREADY PASSED 
+
+                # CHECK IF THE START DATE MATCHES THE CURRENT DATE
                 current_date = datetime.datetime.now().date()
-                start_date = datetime.datetime.strptime(item_values[2], "%m-%d-%Y").date()
+                start_date = datetime.datetime.strptime(item_values[2], "%m/%d/%Y").date()
                 if start_date <= current_date:
-                    tkMessageBox.showwarning("Warning","Cannot delete the event. The event has already started")
+                    tkMessageBox.showerror("Error", "Cannot delete the event. The event has already started.")
                     conn.close()
                     return
-                
-                # DELETE THE EVENTS FROM THE EVENTS TABLE
+
+                # DELETE THE EVENT IF IT DOES NOT CONFORM WITH THE CONDITIONS
                 delete_event_query = "DELETE FROM events WHERE event_ID = ?"
-                cursor.execute(delete_event_query, (event_id,))
-
-                # DELETE THE LOCATION FROM THE EVENT LOCATIONS TABLE
                 delete_location_query = "DELETE FROM event_locations WHERE event_ID = ?"
+                cursor.execute(delete_event_query, (event_id,))
                 cursor.execute(delete_location_query, (event_id,))
-
                 conn.commit()
-                tkMessageBox.showinfo("Message", "The event has been deleted successfully!")
+
+                # REMOVE THE EVENT FROM THE TABLE
                 self.etable.delete(selected_item)
+                tkMessageBox.showinfo("Message", "The event has been deleted successfully!")
+            except sqlite3.Error as e:
+                tkMessageBox.showerror("Error", "An error has occurred: {}".format(str(e)))
+            finally:
                 conn.close()
-            except:
-                tkMessageBox.showerror("Error", "An error has occurred")
-                return
-        self.update_event_table()
+            self.update_event_table()
 
 # ******** EDIT EVENT
     def update_event_info(self):
@@ -603,7 +641,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.tabview.add("EDIT EVENT")  
         self.esavebtn = customtkinter.CTkButton(self.editframe, text="SAVE CHANGES", text_color="black", font=("Arial", 16), fg_color="lightgoldenrod2", bg_color="light yellow", hover=True, hover_color="lightgoldenrod1", corner_radius=10, width=100, height=35, command=self.update_event_info)
         self.esavebtn.place(x=380, y=465)
-        self.backbtn = customtkinter.CTkButton(self.editframe, text="RETURN", text_color="white", font=("Arial", 18, "bold"), fg_color="gray12", bg_color="light yellow", hover=True, hover_color="gray18", corner_radius=10, width=100, height=40, command=go_back)
+        self.backbtn = customtkinter.CTkButton(self.editframe, text="⬅ RETURN", text_color="black", font=("Arial", 18, "bold"), fg_color="lightgoldenrod2", bg_color="light yellow", hover=True, hover_color="lightgoldenrod1", corner_radius=10, width=100, height=40, command=go_back)
         self.backbtn.place(x=750, y=70)
     # LABELS
         self.elabel1 = customtkinter.CTkLabel(self.editframe,text="EVENT:",text_color="black",font=("Helvetica",15),bg_color="light yellow")
@@ -910,7 +948,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.tabview.add("EDIT STUDENT")  
         self.ssavebtn = customtkinter.CTkButton(self.editframe, text="SAVE CHANGES", text_color="black", font=("Arial", 16), fg_color="lightgoldenrod2", bg_color="light yellow", hover=True, hover_color="lightgoldenrod1", corner_radius=10, width=100, height=35, command=self.update_student_info)
         self.ssavebtn.place(x=380, y=460)
-        self.backbtn = customtkinter.CTkButton(self.editframe, text="RETURN", text_color="white", font=("Arial", 18, "bold"), fg_color="gray12", bg_color="light yellow", hover=True, hover_color="gray18", corner_radius=10, width=100, height=40, command=go_back)
+        self.backbtn = customtkinter.CTkButton(self.editframe, text="⬅ RETURN", text_color="black", font=("Arial", 18, "bold"), fg_color="lightgoldenrod2", bg_color="light yellow", hover=True, hover_color="lightgoldenrod1", corner_radius=10, width=100, height=40, command=go_back)
         self.backbtn.place(x=740, y=70)
     # LABELS
         self.slabel1 =customtkinter.CTkLabel(self.editframe,bg_color="light yellow",text="STUDENT INFORMATION:",text_color="black",font=("Helvetica",16,"bold"))
@@ -1180,7 +1218,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.tabview.add("EDIT COURSE")  
         self.csavebtn = customtkinter.CTkButton(self.editframe, text="SAVE CHANGES", text_color="black", font=("Arial", 16), fg_color="lightgoldenrod2", bg_color="light yellow", hover=True, hover_color="lightgoldenrod1", corner_radius=10, width=100, height=35, command=self.update_course_info)
         self.csavebtn.place(x=380, y=260)
-        self.backbtn = customtkinter.CTkButton(self.editframe, text="RETURN", text_color="white", font=("Arial", 18, "bold"), fg_color="gray12", bg_color="light yellow", hover=True, hover_color="gray18", corner_radius=10, width=100, height=40, command=go_back)
+        self.backbtn = customtkinter.CTkButton(self.editframe, text="⬅ RETURN", text_color="black", font=("Arial", 18, "bold"), fg_color="lightgoldenrod2", bg_color="light yellow", hover=True, hover_color="lightgoldenrod1", corner_radius=10, width=100, height=40, command=go_back)
         self.backbtn.place(x=740, y=70)
     # LABELS
         self.clabel1 =customtkinter.CTkLabel(self.editframe,bg_color="light yellow",text="COURSE INFORMATON:",text_color="black",font=("Helvetica",16,"bold"))
