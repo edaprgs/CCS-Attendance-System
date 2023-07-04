@@ -45,13 +45,13 @@ class AttendanceSystemApp(customtkinter.CTk):
 
     # CREATE EVENT TABLE
         create_event = '''CREATE TABLE IF NOT EXISTS events (
-            event_ID	TEXT NOT NULL,
+            event_ID	INTEGER NOT NULL,
             eventName	TEXT NOT NULL,
             startdate	TEXT NOT NULL,
             enddate	TEXT NOT NULL,
             school_year	TEXT NOT NULL,
             semester	TEXT NOT NULL,
-            PRIMARY KEY(event_ID))'''
+            PRIMARY KEY(event_ID AUTOINCREMENT))'''
         cursor.execute(create_event)
 
     # CREATE EVENT LOCATIONS TABLE
@@ -59,7 +59,7 @@ class AttendanceSystemApp(customtkinter.CTk):
             event_ID	TEXT NOT NULL,
             eventLocation	TEXT NOT NULL,
             FOREIGN KEY(event_ID) REFERENCES events(event_ID),
-            PRIMARY KEY(event_ID))'''
+            PRIMARY KEY(event_ID, eventLocation))'''
         cursor.execute(create_eventlocation)
 
     # CREATE ATTENDANCE TABLE 
@@ -89,7 +89,7 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.coursebtn.place(x=290,y=30)
         self.label2 =customtkinter.CTkLabel(self.mainframe,text="MSU-ILIGAN INSTITUTE OF TECHNOLOGY",text_color="papaya whip",font=("Helvetica",40,"bold"))
         self.label2.place(x=55,y=150)
-        self.label3 =customtkinter.CTkLabel(self.mainframe,text="College of Computer Studies",text_color="white",font=("Helvetica",35,"bold"))
+        self.label3 =customtkinter.CTkLabel(self.mainframe,text="Efficient Attendance Management Made Simple!",text_color="white",font=("Helvetica",35,"bold"))
         self.label3.place(x=55,y=200)
         self.label4 =customtkinter.CTkLabel(self.mainframe,text="ATTENDANCE SYSTEM",text_color="lightgoldenrod3",font=("Rowdies",65,"bold"))
         self.label4.place(x=55,y=300)
@@ -270,57 +270,57 @@ class AttendanceSystemApp(customtkinter.CTk):
 
 # ******** ADD EVENT
     def add_event(self):
-        eventName = self.eNameentry.get().upper()
-        month1 = str(self.monthOM1_var.get())
-        day1 = str(self.dayOM1_var.get())
-        year1 = str(self.yearOM1_var.get())
-        start_date = month1 + "/" + day1 + "/" + year1
-        month2 = str(self.monthOM2_var.get())
-        day2 = str(self.dayOM2_var.get())
-        year2 = str(self.yearOM2_var.get())
-        end_date = month2 + "/" + day2 + "/" + year2
-        school_year = str(self.schoolyearOM_var.get())
-        semester = str(self.semesterOM_var.get())
-        location = self.location.get().upper()
+        try:
+            eventName = self.eNameentry.get().upper()
+            month1 = str(self.monthOM1_var.get())
+            day1 = str(self.dayOM1_var.get())
+            year1 = str(self.yearOM1_var.get())
+            start_date = month1 + "/" + day1 + "/" + year1
+            month2 = str(self.monthOM2_var.get())
+            day2 = str(self.dayOM2_var.get())
+            year2 = str(self.yearOM2_var.get())
+            end_date = month2 + "/" + day2 + "/" + year2
+            school_year = str(self.schoolyearOM_var.get())
+            semester = str(self.semesterOM_var.get())
+            location = self.location.get().upper()
 
-        # PRINT VALUES FOR DEBUGGING
-        print("Event Name:", eventName)
-        print("Start Date:", start_date)
-        print("End Date:", end_date)
-        print("School Year:", school_year)
-        print("Semester:", semester)
-        print("Location:",location)
-
-        if eventName == '' or start_date == '' or end_date == '' or school_year == '' or semester == '' or location == '':
-            tkMessageBox.showwarning("Warning", "Please fill in all the fields!")
-        else:
-            conn = sqlite3.connect('attendancesystem.db')
-            cursor = conn.cursor()
-            # CHECK IF THERE EXIST AN EVENT WITH THE SAME NAME AND LOCATION
-            event_exists_query = "SELECT events.event_ID FROM events JOIN event_locations ON events.event_ID = event_locations.event_ID WHERE events.eventName = ? AND event_locations.eventLocation = ?"
-            cursor.execute(event_exists_query, (eventName, location))
-            existing_event = cursor.fetchone()
-
-            if existing_event:
-                tkMessageBox.showerror("Error", "An event with the same name and location already exists.")
-                return
-                
-            # INSERT THE DATA TO THE EVENTS TABLE
+            if eventName == '' or start_date == '' or end_date == '' or school_year == '' or semester == '' or location == '':
+                tkMessageBox.showwarning("Warning", "Please fill in all the fields!")
             else:
-                data_insert_query = '''INSERT INTO events (eventName, startdate, enddate, school_year, semester) VALUES (?, ?, ?, ?, ?)'''
-                cursor.execute(data_insert_query, (eventName, start_date, end_date, school_year, semester))
-                conn.commit()
-                # RETRIEVE THE ID OF THE NEWLY ADDED EVENT
-                event_id = cursor.lastrowid
-                # INSERT THE LOCATION INTO THE EVENT LOCATIONS TABLE
-                location_insert_query = '''INSERT INTO event_locations (event_ID, eventLocation) VALUES (?, ?)'''
-                cursor.execute(location_insert_query, (event_id, location))
-                conn.commit()
-                tkMessageBox.showinfo("Message", "Event information added successfully")
+                conn = sqlite3.connect('attendancesystem.db')
+                cursor = conn.cursor()
+                # CHECK IF THERE EXIST AN EVENT WITH THE SAME NAME AND LOCATION
+                event_exists_query = "SELECT events.event_ID FROM events JOIN event_locations ON events.event_ID = event_locations.event_ID WHERE events.eventName = ? AND event_locations.eventLocation = ?"
+                cursor.execute(event_exists_query, (eventName, location))
+                existing_event = cursor.fetchone()
 
-        self.clear_event_inputs()
-        self.update_event_table()
-        conn.close()
+                if existing_event:
+                    tkMessageBox.showerror("Error", "An event with the same name and location already exists.")
+                    return
+                    
+                # INSERT THE DATA TO THE EVENTS TABLE
+                else:
+                    data_insert_query = '''INSERT INTO events (eventName, startdate, enddate, school_year, semester) VALUES (?, ?, ?, ?, ?)'''
+                    cursor.execute(data_insert_query, (eventName, start_date, end_date, school_year, semester))
+                    conn.commit()
+                    # RETRIEVE THE ID OF THE NEWLY ADDED EVENT
+                    event_id = cursor.lastrowid
+                    # INSERT THE LOCATION INTO THE EVENT LOCATIONS TABLE
+                    location_insert_query = '''INSERT INTO event_locations (event_ID, eventLocation) VALUES (?, ?)'''
+                    cursor.execute(location_insert_query, (event_id, location))
+                    conn.commit()
+                    tkMessageBox.showinfo("Message", "Event information added successfully")
+                    
+        except sqlite3.Error as e:
+            tkMessageBox.showerror("Database Error", str(e))
+
+        except Exception as e:
+            tkMessageBox.showerror("Error", str(e))
+
+        finally:
+            self.clear_event_inputs()
+            self.update_event_table()
+            conn.close()
 
 # ******** DELETE EVENT
     def delete_event(self):
@@ -537,18 +537,10 @@ class AttendanceSystemApp(customtkinter.CTk):
             cursor.execute(validate_datetime_query, (event_id,))
             start_date_str, end_date_str = cursor.fetchone()
 
-            print("Event ID:", event_id)
-            print("Start date:", start_date_str)
-            print("End date:", end_date_str)
-
             current_datetime = datetime.datetime.now()
-            print("Current datetime:", current_datetime)
 
             start_date = datetime.datetime.strptime(start_date_str, '%m/%d/%Y')
             end_date = datetime.datetime.strptime(end_date_str, '%m/%d/%Y')
-
-            print("Parsed start date:", start_date)
-            print("Parsed end date:", end_date)
 
             return start_date <= current_datetime <= end_date or current_datetime.date() == end_date.date()
 
@@ -695,12 +687,7 @@ class AttendanceSystemApp(customtkinter.CTk):
             exists_query = "SELECT attendance.* FROM attendance JOIN events ON attendance.event_ID = events.event_ID JOIN event_locations ON events.event_ID = event_locations.event_ID WHERE attendance.student_ID = ? AND attendance.event_ID = ? AND event_locations.eventLocation = ?"
             cursor.execute(exists_query, (student_id, event_id, location))
             existing_record = cursor.fetchone()
-
-            # PRINT VALUES FOR DEBUGGING
-            print("Event ID:", event_id)
-            print("Event Name:", selected_event_name)
-            print("Event Location:",selected_event_location)
-
+            
             if existing_record:
                 if sign_type == 'IN':
                     tkMessageBox.showerror("Sign-in Attendance Recorded", "Sign-in Attendance for this student at this day and location is already recorded.")
@@ -876,28 +863,36 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.scourse_var.set('Select')
 
     def add_student(self):
-        conn = sqlite3.connect('attendancesystem.db')
-        cursor = conn.cursor() 
-        student_ID = self.sIDent.get()
-        last_name = self.slNameent.get().upper()
-        first_name = self.sfNameent.get().upper()
-        mid_name = self.smNameent.get().upper()
-        year_level = self.syearlevel_var.get()
-        course_code = self.scourse_var.get()
+        try:
+            conn = sqlite3.connect('attendancesystem.db')
+            cursor = conn.cursor() 
+            student_ID = self.sIDent.get()
+            last_name = self.slNameent.get().upper()
+            first_name = self.sfNameent.get().upper()
+            mid_name = self.smNameent.get().upper()
+            year_level = self.syearlevel_var.get()
+            course_code = self.scourse_var.get()
 
-        if student_ID=='' or last_name=='' or first_name=='' or mid_name=='' or year_level=='' or course_code=='': tkMessageBox.showwarning("Warning","Please fill the empty field!")
-        else:
-            if self.student_exists(cursor, student_ID):
-                tkMessageBox.showerror("Error", "There is already a student with the same student ID in the system!")
+            if student_ID=='' or last_name=='' or first_name=='' or mid_name=='' or year_level=='' or course_code=='': tkMessageBox.showwarning("Warning","Please fill the empty field!")
             else:
-                data_insert_query = '''INSERT INTO student (student_ID,lastName,firstName,midName,year_level,course_code) VALUES (?,?,?,?,?,?)'''
-                data_insert_tuple = (student_ID,last_name,first_name,mid_name,year_level,course_code)
-                cursor.execute(data_insert_query,data_insert_tuple)
-                conn.commit()
-                tkMessageBox.showinfo("Message","Student information added successfully")
-        conn.commit()
-        self.update_student_table()
-        self.clear_student_inputs()
+                if self.student_exists(cursor, student_ID):
+                    tkMessageBox.showerror("Error", "There is already a student with the same student ID in the system!")
+                else:
+                    data_insert_query = '''INSERT INTO student (student_ID,lastName,firstName,midName,year_level,course_code) VALUES (?,?,?,?,?,?)'''
+                    data_insert_tuple = (student_ID,last_name,first_name,mid_name,year_level,course_code)
+                    cursor.execute(data_insert_query,data_insert_tuple)
+                    conn.commit()
+                    tkMessageBox.showinfo("Message","Student information added successfully")
+        except sqlite3.Error as e:
+            tkMessageBox.showerror("Database Error", str(e))
+
+        except Exception as e:
+            tkMessageBox.showerror("Error", str(e))
+
+        finally:
+            conn.commit()
+            self.update_student_table()
+            self.clear_student_inputs()
 
     # CHECK IF THE SAME STUDENT ID ALREADY EXISTS IN THE DATABASE
     def student_exists(self, cursor, student_ID):
@@ -1132,25 +1127,33 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.cnameent.delete(0, END)
 
     def add_course(self):
-        conn = sqlite3.connect('attendancesystem.db')
-        cursor = conn.cursor()
+        try:
+            conn = sqlite3.connect('attendancesystem.db')
+            cursor = conn.cursor()
     # get the course info from the input fields
-        course_code = self.ccodeent.get().upper()
-        course = self.cnameent.get().upper()
+            course_code = self.ccodeent.get().upper()
+            course = self.cnameent.get().upper()
     # input in database
-        if course_code=='' or course=='': tkMessageBox.showwarning("Warning","Fill the empty field!")
-        else:
-            if self.course_exists(cursor, course_code,course):
-                tkMessageBox.showerror("Error", "The course cannot be added. It already exists!")
+            if course_code=='' or course=='': tkMessageBox.showwarning("Warning","Fill the empty field!")
             else:
-                data_insert_query = '''INSERT INTO course (course_code,courseName) VALUES (?,?)'''
-                data_insert_tuple = (course_code,course)
-                tkMessageBox.showinfo("Message","Course added successfully")
-                cursor.execute(data_insert_query,data_insert_tuple)
-                conn.commit()
-        conn.close()
-        self.clear_course_inputs()
-        self.update_course_table()
+                if self.course_exists(cursor, course_code,course):
+                    tkMessageBox.showerror("Error", "The course cannot be added. It already exists!")
+                else:
+                    data_insert_query = '''INSERT INTO course (course_code,courseName) VALUES (?,?)'''
+                    data_insert_tuple = (course_code,course)
+                    tkMessageBox.showinfo("Message","Course added successfully")
+                    cursor.execute(data_insert_query,data_insert_tuple)
+                    conn.commit()
+        except sqlite3.Error as e:
+            tkMessageBox.showerror("Database Error", str(e))
+
+        except Exception as e:
+            tkMessageBox.showerror("Error", str(e))
+
+        finally:
+            conn.close()
+            self.clear_course_inputs()
+            self.update_course_table()
     
     # Check if a course with the same code and name already exists in the database
     def course_exists(self, cursor, course_code,course):
