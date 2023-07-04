@@ -96,6 +96,14 @@ class AttendanceSystemApp(customtkinter.CTk):
         self.attendancebtn =customtkinter.CTkButton(self.mainframe,text="Mark Attendance",text_color="black",font=("Arial",20,"bold"),fg_color="lightgoldenrod3",hover=True,hover_color= "lightgoldenrod2",corner_radius=25,width=205,height=50,command=self.eventcom)
         self.attendancebtn.place(x=55,y=415)
 
+        self.protocol("WM_DELETE_WINDOW",self.close_window)
+
+    # CLOSE WINDOW
+    def close_window(self):
+        answer = tkMessageBox.askyesno(title="Exit", message="Do you want to close the window?")
+        if answer != NO:
+            self.destroy()
+
     # TABLE STYLE CONFIGURATION
     def tablestyle(self):
         style = ttk.Style()
@@ -105,8 +113,6 @@ class AttendanceSystemApp(customtkinter.CTk):
         style.configure("Treeview", highlightthickness=0, bd=0, font=('Calibri', 14))
         style.layout("Treeview", [('Treeview.treearea', {'sticky': 'nswe'})])
         style.map("Treeview", background=[("selected", "lightgoldenrod4")])
-
-
 
 
 
