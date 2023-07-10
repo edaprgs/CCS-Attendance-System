@@ -1,0 +1,215 @@
+
+#**************************************************************** ADD COURSE FUNCTIONS ****************************************************************#
+        def course_exists(self, course_code, course_name):
+                conn = sqlite3.connect('attendancesystem.db')
+                cursor = conn.cursor()
+                query = '''SELECT * FROM course WHERE course_code = ? or courseName LIKE ?'''
+                search_term = '%' + course_name + '%'
+                cursor.execute(query, (course_code, search_term))
+                result = cursor.fetchone()  # Retrieve the first row
+                conn.close()
+                return result is not None
+
+        def add_course(self):
+                conn = sqlite3.connect('attendancesystem.db')
+                cursor = conn.cursor()
+                # Get the course info from the input fields
+                course_code = self.ccodeent.get().upper()
+                course_name = self.cnameent.get().upper()
+
+                if course_code == '' or course_name == '':
+                        tkMessageBox.showwarning("Warning", "Fill the empty field!")
+                else:
+                        if self.course_exists(course_code, course_name):
+                                tkMessageBox.showerror("Error", "The course cannot be added. It already exists!")
+                        else:
+                                # Insert the course data into the database
+                                data_insert_query = '''INSERT INTO course (course_code, courseName) VALUES (?, ?)'''
+                                data_insert_tuple = (course_code, course_name)
+                                self.conn.execute(data_insert_query, data_insert_tuple)
+                                self.conn.commit()
+                                tkMessageBox.showinfo("Message", "Course added successfully")
+                                self.clear_course_inputs()
+                self.show_course()  # Update the course table after adding
+                
+        def clear_course_inputs(self):
+                self.ccodeent.delete(0, 'end')  # Use 'end' instead of END
+                self.cnameent.delete(0, 'end')
+                self.show_course()  # Update the course table after clearing inputs
+
+#**************************************************************** COURSE LIST FUNCTIONS ****************************************************************#
+
+        def show_course(self, search_term=None):
+                conn = sqlite3.connect('attendancesystem.db')
+                cursor = conn.cursor()
+                if search_term:
+                        query = '''SELECT course_code, courseName FROM course WHERE course_code = ? or courseName LIKE ?'''
+                        search_param = '%' + search_term + '%'
+                        cursor.execute(query, (search_term, search_param))
+                else:
+                        query = '''SELECT course_code, courseName FROM course'''
+                        cursor.execute(query)
+                
+                courses = cursor.fetchall()
+                conn.close()
+
+                self.ctable.delete(*self.ctable.get_children())
+
+                for course in courses:
+                        self.ctable.insert("", tk.END, values=course)
+
+        # Function to update the course list
+        def update_course_list(self):
+                search_term = self.csearchentry.get()
+                self.show_course(search_term)
+
+        def delete_course(self):
+                if not self.ctable.selection():
+                        tkMessageBox.showerror("Error", "No item selected. Please select a course from the table.")
+                        return
+
+                decision = tkMessageBox.askquestion("Warning", "Are you sure you want to delete the selected course?")
+                if decision != 'yes':
+                        return
+                else:
+                        selected_item = self.ctable.selection()[0]
+                        delete_data = str(self.ctable.item(selected_item)['values'][0])
+                        try:
+                                conn = sqlite3.connect('attendancesystem.db')
+                                cursor = conn.cursor()
+                                cursor.execute("DELETE FROM course WHERE course_code = ?", (delete_data,))
+                                conn.commit()
+                                conn.close()
+                                tkMessageBox.showinfo("Message", "The course has been deleted successfully!")
+                                self.show_course()
+                        except:
+                                tkMessageBox.showerror("Error", "An error has occurred")                               
+
+        def edit_course_data(self):
+                if not self.ctable.selection():
+                        tkMessageBox.showerror("Error", "No item selected. Please select a course from the table.")
+                        return
+
+                selected_item = self.ctable.selection()[0]
+                course_code = str(self.ctable.item(selected_item)['values'][0])
+
+                # Open a new window for editing course information
+                edit_window = Toplevel(self)
+                edit_window.title("Edit Course Information")
+                edit_window.geometry("700x240+0+0")
+
+                conn = sqlite3.connect('attendancesystem.db')
+                cursor = conn.cursor()
+
+                cursor.execute("SELECT * FROM course WHERE course_code = ?", (course_code,))
+                data = cursor.fetchone()
+
+                # Create variables to store the edited values
+                edited_course_code = StringVar()
+                edited_course_name = StringVar()
+
+                # Populate the entry fields with the existing course information
+                self.course_label = customtkinter.CTkLabel(edit_window, text="Course:", font=("Arial", 12))
+                self.course_label.place(x=25, y=50)
+                self.course_entry = customtkinter.CTkEntry(edit_window, textvariable=edited_course_name, placeholder_text="e.g. BACHELOR OF SCIENCE IN COMPUTER SCIENCE",
+                                                        placeholder_text_color="LightSkyBlue4", border_color="LightSkyBlue4", width=450, height=30)
+                self.course_entry.place(x=80, y=50)
+                self.course_entry.insert(0, data[1])  # Insert the existing course name
+
+                self.code_label = customtkinter.CTkLabel(edit_window, text="Code:", font=("Arial", 12))
+                self.code_label.place(x=25, y=100)
+                self.code_entry = customtkinter.CTkEntry(edit_window, textvariable=edited_course_code, placeholder_text="e.g. BSCS",
+                                                        placeholder_text_color="LightSkyBlue4", border_color="LightSkyBlue4", width=200, height=30)
+                self.code_entry.place(x=80, y=100)
+                self.code_entry.insert(0, data[0])  # Insert the existing course code
+
+                # Save edited course
+                def save_changes():
+                        try:
+                                edited_course_name.set(self.course_entry.get())
+                                edited_course_code.set(self.code_entry.get())
+
+                                cursor.execute("UPDATE course SET courseName = ?, course_code = ? WHERE course_code = ?", (edited_course_name.get(), edited_course_code.get(), course_code))
+                                conn.commit()
+                                conn.close()
+                                tkMessageBox.showinfo("Message", "Course information has been updated successfully!")
+                                edit_window.destroy()
+                                self.show_course()  # Update the course table after editing
+                        except:
+                                tkMessageBox.showerror("Error", "An error has occurred")
+
+                self.savecourse_btn = customtkinter.CTkButton(edit_window, text="Save Changes", text_color=("black", "white"),
+                                                                fg_color="LightSkyBlue3", border_width=2, hover=True,
+                                                                hover_color="LightSkyBlue4", corner_radius=10,
+                                                                border_color="LightSkyBlue3", width=100, height=30,
+                                                                command=save_changes)
+                self.savecourse_btn.place(x=426, y=100)
+
+                
+#**************************************************************** ADD COURSE TABVIEW ****************************************************************#
+        def coursecom(self):
+                self.courseframe = tk.Frame(self.mainframe,width=1150,height=810,background="gray1")
+                self.courseframe.place(x=65,y=100)
+                self.tabview = customtkinter.CTkTabview(master=self.courseframe,width=900,height=500)
+                self.tabview.place(x=0,y=20)
+                self.tabview.configure(text_color="black",fg_color="light yellow",segmented_button_fg_color="lightgoldenrod3",segmented_button_selected_color="light yellow",segmented_button_unselected_color="lightgoldenrod3",segmented_button_unselected_hover_color="light yellow",segmented_button_selected_hover_color="light yellow")
+                self.tabview.add("ADD COURSE")  
+                self.tabview.add("COURSES LIST") 
+                self.tabview.set("COURSES LIST")
+                
+# LABELS
+                self.clabel1 =customtkinter.CTkLabel(self.tabview.tab("ADD COURSE") ,text="COURSE INFORMATON:",text_color="black",font=("Helvetica",16,"bold"))
+                self.clabel1.place(x=45,y=45)
+                self.clabel2 =customtkinter.CTkLabel(self.tabview.tab("ADD COURSE") ,text="COURSE CODE:",text_color="black",font=("Helvetica",15))
+                self.clabel2.place(x=45,y=120)
+                self.clabel3 =customtkinter.CTkLabel(self.tabview.tab("ADD COURSE") ,text="COURSE NAME:",text_color="black",font=("Helvetica",15))
+                self.clabel3.place(x=45,y=190)
+# ENTRIES
+                self.ccodeent = customtkinter.CTkEntry(self.tabview.tab("ADD COURSE"),placeholder_text="e.g. BSCS",placeholder_text_color="lightgoldenrod4",border_color="lightgoldenrod2",fg_color="lightgoldenrod2",width=230,height=35)
+                self.ccodeent.place(x=180,y=120)
+                self.cnameent = customtkinter.CTkEntry(self.tabview.tab("ADD COURSE"),placeholder_text="e.g. BACHELOR OF SCIENCE IN COMPUTER SCIENCE",placeholder_text_color="lightgoldenrod4",border_color="lightgoldenrod2",fg_color="lightgoldenrod2",width=660,height=35)
+                self.cnameent.place(x=180,y=190)
+# SAVE BUTTON TO ADD COURSE
+                self.ssavebtn = customtkinter.CTkButton(self.tabview.tab("ADD COURSE"),text="ADD COURSE",font=("Helvetica",14),text_color="black",fg_color="lightgoldenrod2",border_width=2,hover=True,hover_color= "lightgoldenrod1",corner_radius=10,border_color= "lightgoldenrod2",width=100,height=35, command=self.add_course)
+                self.ssavebtn.place(x=400,y=260)
+
+#**************************************************************** COURSES LIST TABVIEW ****************************************************************#
+# COURSES LIST TABVIEW
+                self.tabview.set("COURSES LIST")
+                
+                self.elabel7 =customtkinter.CTkLabel(self.tabview.tab("COURSES LIST"),text="COURSES LIST:",text_color="black",font=("Helvetica",16,"bold"))
+                self.elabel7.place(x=45,y=45)
+# SEARCH
+                self.elabel8 =customtkinter.CTkLabel(self.tabview.tab("COURSES LIST"),text="SEARCH:",text_color="black",font=("Helvetica",13))
+                self.elabel8.place(x=610,y=45)
+                self.csearchentry = customtkinter.CTkEntry(self.tabview.tab("COURSES LIST"),placeholder_text="e.g. BSCS",placeholder_text_color="lightgoldenrod4",border_color="lightgoldenrod2",fg_color="lightgoldenrod2",width=160,height=35)
+                self.csearchentry.place(x=680,y=45)
+# TABLE
+                self.tablestyle()
+                self.table_frame = tk.Frame(self.tabview.tab("COURSES LIST"),bg="white")
+                self.table_frame.place(x=55,y=120,width=1000,height=290)
+                self.y_scroll = customtkinter.CTkScrollbar(self.table_frame,orientation=VERTICAL,button_color="lightgoldenrod4",button_hover_color="lightgoldenrod3",fg_color="light yellow")
+                self.y_scroll.pack(side=RIGHT,fill=Y)
+                self.ctable = ttk.Treeview(self.table_frame,yscrollcommand=self.y_scroll.set)
+                self.y_scroll.configure(command=self.ctable.yview)
+                self.ctable["columns"] = ("COURSE CODE","COURSE NAME")
+                self.ctable.column("#0", width=0, stretch=NO)  
+                self.ctable.column("COURSE CODE", width=50,anchor=CENTER)
+                self.ctable.column("COURSE NAME", width=400,anchor=CENTER)
+                self.ctable.heading("COURSE CODE", text="COURSE CODE")
+                self.ctable.heading("COURSE NAME", text="COURSE NAME")
+                self.ctable.pack(fill=BOTH,expand=True)
+                
+                self.show_course()
+                
+# BUTTONS
+                self.eeditbtn = customtkinter.CTkButton(self.tabview.tab("COURSES LIST"),text="EDIT COURSE",font=("Helvetica",14),text_color="black",fg_color="lightgoldenrod2",border_width=2,hover= True,hover_color= "lightgoldenrod1",corner_radius=10,border_color= "lightgoldenrod2",width=100,height=35, command=self.edit_course_data)
+                self.eeditbtn.place(x=595,y=345)
+                self.edeletebtn = customtkinter.CTkButton(self.tabview.tab("COURSES LIST"),text="DELETE",font=("Helvetica",14),text_color="white",fg_color="red2",border_width=2,hover= True,hover_color= "red",corner_radius=10,border_color= "red2",width=100,height=35, command=self.delete_course)
+                self.edeletebtn.place(x=730,y=345)
+                self.update_btn = customtkinter.CTkButton(self.tabview.tab("COURSES LIST"), text="Update/Search", font=("Helvetica", 14),
+                                          text_color="black", fg_color="lightgoldenrod2", border_width=2, hover=True,
+                                          hover_color="lightgoldenrod1", corner_radius=10, border_color="lightgoldenrod2",
+                                          width=100, height=35, command=self.update_course_list)
+                self.update_btn.place(x=460, y=345)
+                
